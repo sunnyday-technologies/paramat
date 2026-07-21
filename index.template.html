@@ -25,18 +25,27 @@
     --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}
   *{box-sizing:border-box}
   body{margin:0;background:var(--page);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
-    padding:0 16px calc(60px + env(safe-area-inset-bottom))}
-  .wrap{max-width:720px;margin:0 auto}.tnum{font-variant-numeric:tabular-nums}
+    padding:0 0 calc(60px + env(safe-area-inset-bottom))}
+  .wrap{max-width:720px;margin:0 auto;padding:0 16px}.tnum{font-variant-numeric:tabular-nums}
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  header{padding:26px 0 8px}
+  /* cinematic hero band: AI-generated macro print footage behind the header,
+     dark in both themes so the light text always reads */
+  .heroband{position:relative;overflow:hidden;background:#171310 center/cover no-repeat;margin-bottom:18px}
+  .heroband video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s}
+  .heroband video.on{opacity:1}
+  .heroband .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,12,10,.46) 0%,rgba(16,12,10,.62) 62%,rgba(16,12,10,.88) 100%)}
+  .heroband .wrap{position:relative;z-index:1}
+  header{padding:34px 0 22px;color:#f4f0ea}
+  header .eyebrow{color:#cdc4b8}
+  header .sub{color:#d8cfc3}
   .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
   .eyebrow .d{width:8px;height:8px;border-radius:2px;background:var(--accent)}
-  h1{font-size:clamp(23px,5.5vw,31px);line-height:1.12;letter-spacing:-.02em;margin:10px 0 6px;font-weight:800}
+  h1{font-size:clamp(23px,5.5vw,31px);line-height:1.12;letter-spacing:-.02em;margin:10px 0 6px;font-weight:800;text-shadow:0 1px 14px rgba(0,0,0,.35)}
   .sub{color:var(--ink2);max-width:58ch;margin:0 0 14px;font-size:15.5px}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:0 0 16px}
-  .stat{background:var(--card);padding:12px 12px;text-align:center}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:14px;overflow:hidden;margin:0;backdrop-filter:blur(8px)}
+  .stat{background:rgba(20,15,12,.55);padding:12px 12px;text-align:center;color:#f4f0ea}
   .stat b{display:block;font-size:clamp(18px,4.5vw,24px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .stat span{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
+  .stat span{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#b7ad9f}
   .row{display:flex;gap:8px}
   #q{width:100%;min-height:56px;box-sizing:border-box;font-size:17px;padding:14px 16px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none;-webkit-appearance:none}
   #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -112,17 +121,22 @@
   #toast.on{opacity:1}
 </style>
 
+<div class="heroband" id="heroband" style="background-image:url(hero.jpg)">
+  <div class="shade"></div>
+  <div class="wrap">
+    <header>
+      <div class="eyebrow"><span class="d"></span> ParaMat · free &amp; open filament reference</div>
+      <h1>Exact print settings for <em>your exact</em> filament.</h1>
+      <p class="sub">Cross-checked consensus from open slicer + manufacturer data — not one vendor's defaults. Search or scan, tune for strength / finish / speed, export to your slicer or an NFC spool tag.</p>
+      <div class="stats" role="group" aria-label="Database size">
+        <div class="stat"><b id="st-products">—</b><span>products</span></div>
+        <div class="stat"><b id="st-colors">—</b><span>colors</span></div>
+        <div class="stat"><b id="st-skus">—</b><span>SKUs</span></div>
+      </div>
+    </header>
+  </div>
+</div>
 <div class="wrap">
-  <header>
-    <div class="eyebrow"><span class="d"></span> ParaMat · free &amp; open filament reference</div>
-    <h1>Exact print settings for <em>your exact</em> filament.</h1>
-    <p class="sub">Cross-checked consensus from open slicer + manufacturer data — not one vendor's defaults. Search or scan, tune for strength / finish / speed, export to your slicer or an NFC spool tag.</p>
-    <div class="stats" role="group" aria-label="Database size">
-      <div class="stat"><b id="st-products">—</b><span>products</span></div>
-      <div class="stat"><b id="st-colors">—</b><span>colors</span></div>
-      <div class="stat"><b id="st-skus">—</b><span>SKUs</span></div>
-    </div>
-  </header>
 
   <div class="search">
     <div class="row">
@@ -226,6 +240,19 @@
     toast(topt.checked?"Thanks — anonymous counts on":"Anonymous counts off")};
 
   const slugOf=m=>((m.brand||"")+"_"+(m.product||"")).replace(/[^\w]+/g,"_").toLowerCase();
+
+  // hero video: only on larger screens, never for reduced-motion or data-saver
+  // users; fades in over the poster once it can play
+  (function(){try{
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+    if(navigator.connection&&navigator.connection.saveData)return;
+    if(innerWidth<640)return;
+    const v=document.createElement("video");
+    v.muted=true;v.loop=true;v.playsInline=true;v.autoplay=true;v.preload="metadata";
+    v.setAttribute("aria-hidden","true");v.src="hero.mp4";
+    v.addEventListener("canplay",()=>{v.classList.add("on");v.play().catch(()=>{})});
+    document.getElementById("heroband").prepend(v);
+  }catch(e){}})();
 
   const byFam={};DATA.forEach(m=>{if(m.noz!=null)(byFam[m.family]=byFam[m.family]||[]).push(m.noz)});
   const famMed={};for(const f in byFam){const a=byFam[f].sort((x,y)=>x-y);famMed[f]=a[a.length>>1]}
