@@ -10,7 +10,7 @@
 Fetch the full dataset once (about 1.4 MB raw, ~250 KB compressed; served with open CORS)
 and filter locally:
 
-- Dataset: https://sunnyday-technologies.github.io/paramat/data.json
+- Dataset: https://paramat3d.com/data.json
 
 Structure: `{"materials": [...], "gtin": {...}, "totals": {...}}`
 
@@ -31,11 +31,11 @@ Each entry in `materials`:
 
 Guidance for answers: values are aggregated consensus STARTING POINTS, not measured optima —
 recommend a small calibration print, and never exceed the printer/hotend rated limits.
-Deep-link any material: https://sunnyday-technologies.github.io/paramat/#m=<brand_product_slug>
+Deep-link any material: https://paramat3d.com/#m=<brand_product_slug>
 (lowercase, non-alphanumerics -> "_", e.g. #m=prusament_pla).
 
 ## Pages
 
-- Tool (interactive): https://sunnyday-technologies.github.io/paramat/
-- Terms & privacy: https://sunnyday-technologies.github.io/paramat/legal.html
+- Tool (interactive): https://paramat3d.com/
+- Terms & privacy: https://paramat3d.com/legal.html
 - Source & issues: https://github.com/sunnyday-technologies/paramat
