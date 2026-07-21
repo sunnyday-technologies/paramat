@@ -6,15 +6,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Public, anonymous aggregate of which filaments the ParaMat community looks up, exports, and flags. No personal data — this is everything we collect.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <style>
   :root{color-scheme:light;
-    --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
-    --line:#e7e2d9;--hair:rgba(26,23,20,.08);--accent:#d8531f;--cool:#2a6fb0;--good:#2f7d32}
+    --page:#f7f8f5;--card:#ffffff;--ink:#0c2233;--ink2:#46586a;--ink3:#77879a;
+    --line:#dfe4e6;--hair:rgba(1,58,115,.08);--accent:#013a73;--cool:#0b62b0;--good:#4c8a00}
   @media(prefers-color-scheme:dark){:root{
-    --page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
-    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--cool:#5fa1dc;--good:#57b45c;color-scheme:dark}}
+    --page:#060d14;--card:#0e1a28;--ink:#eef3f7;--ink2:#b8c7d4;--ink3:#7e93a6;
+    --line:#1a3350;--hair:rgba(255,255,255,.09);--accent:#4d94d6;--cool:#63a9e8;--good:#a5dc2e;color-scheme:dark}}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--page);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px 60px}
+  body{margin:0;background:var(--page);color:var(--ink);font:16.5px/1.6 Inter,-apple-system,"Segoe UI",Arial,sans-serif;padding:0 16px 60px}
   .wrap{max-width:720px;margin:0 auto}
   header{padding:28px 0 10px}
   .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
@@ -36,6 +39,12 @@
 </style>
 </head>
 <body>
+<div class="brandbar" style="position:sticky;top:0;z-index:40;background:#013a73;border-bottom:4px solid #97d700;box-shadow:0 2px 14px rgba(1,26,52,.25)">
+  <div style="max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 20px">
+    <a href="https://sunn3d.com" target="_blank" rel="noopener" aria-label="Sunnyday Technologies"><img src="sdt-wordmark-white.png" alt="Sunnyday Technologies" style="height:17px;display:block"></a>
+    <nav style="display:flex;gap:22px"><a href="./" style="color:#fff;text-decoration:none;font-size:13.5px;font-weight:600">Tool</a><a href="stats.html" style="color:#fff;text-decoration:none;font-size:13.5px;font-weight:600">Stats</a><a href="https://github.com/sunnyday-technologies/paramat" target="_blank" rel="noopener" style="color:#fff;text-decoration:none;font-size:13.5px;font-weight:600">GitHub</a></nav>
+  </div>
+</div>
 <div class="wrap">
   <header>
     <div class="eyebrow">ParaMat · public aggregate</div>
