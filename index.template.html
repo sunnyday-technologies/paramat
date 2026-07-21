@@ -7,45 +7,57 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://paramat3d.com/">
 <meta name="twitter:card" content="summary">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f5f2">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131110">
+<meta name="theme-color" content="#013a73">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Dataset","name":"ParaMat — open filament print settings","description":"Cross-source consensus print settings (nozzle/bed temperature, flow, drying) for 3,700+ FFF filament product lines, with color variants, SKUs and GTIN barcodes. Aggregated from openly licensed slicer and manufacturer data.","url":"https://paramat3d.com/","license":"https://creativecommons.org/licenses/by/4.0/","creator":{"@type":"Organization","name":"Sunnyday Technologies"},"isAccessibleForFree":true,"distribution":[{"@type":"DataDownload","encodingFormat":"application/json","contentUrl":"https://paramat3d.com/data.json"}],"keywords":["3D printing","filament","print settings","FFF","FDM","PLA","PETG","nozzle temperature"]}</script>
 <style>
   :root{color-scheme:light;
-    --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
-    --line:#e7e2d9;--hair:rgba(26,23,20,.08);--accent:#d8531f;--accent-soft:rgba(216,83,31,.10);
-    --cool:#2a6fb0;--cool-soft:rgba(42,111,176,.10);--good:#2f7d32;--good-soft:rgba(47,125,50,.10)}
+    --page:#f7f8f5;--card:#ffffff;--ink:#0c2233;--ink2:#46586a;--ink3:#77879a;
+    --line:#dfe4e6;--hair:rgba(1,58,115,.08);--accent:#013a73;--accent-soft:rgba(1,58,115,.08);
+    --cool:#0b62b0;--cool-soft:rgba(11,98,176,.08);--good:#4c8a00;--good-soft:rgba(151,215,0,.16);
+    --warn:#8f5a00;--warn-soft:rgba(180,124,0,.12);--brand-green:#97d700}
   @media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
-    --page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
-    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--accent-soft:rgba(240,112,60,.16);
-    --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}}
-  :root[data-theme="dark"]{--page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
-    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--accent-soft:rgba(240,112,60,.16);
-    --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}
+    --page:#060d14;--card:#0e1a28;--ink:#eef3f7;--ink2:#b8c7d4;--ink3:#7e93a6;
+    --line:#1a3350;--hair:rgba(255,255,255,.09);--accent:#4d94d6;--accent-soft:rgba(77,148,214,.14);
+    --cool:#63a9e8;--cool-soft:rgba(99,169,232,.12);--good:#a5dc2e;--good-soft:rgba(151,215,0,.14);
+    --warn:#d9a441;--warn-soft:rgba(217,164,65,.13);color-scheme:dark}}
+  :root[data-theme="dark"]{--page:#060d14;--card:#0e1a28;--ink:#eef3f7;--ink2:#b8c7d4;--ink3:#7e93a6;
+    --line:#1a3350;--hair:rgba(255,255,255,.09);--accent:#4d94d6;--accent-soft:rgba(77,148,214,.14);
+    --cool:#63a9e8;--cool-soft:rgba(99,169,232,.12);--good:#a5dc2e;--good-soft:rgba(151,215,0,.14);
+    --warn:#d9a441;--warn-soft:rgba(217,164,65,.13);color-scheme:dark}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--page);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  body{margin:0;background:var(--page);color:var(--ink);font:16.5px/1.6 Inter,-apple-system,"Segoe UI",Arial,sans-serif;
     padding:0 0 calc(60px + env(safe-area-inset-bottom))}
-  .wrap{max-width:720px;margin:0 auto;padding:0 16px}.tnum{font-variant-numeric:tabular-nums}
+  .wrap{max-width:760px;margin:0 auto;padding:0 20px}.tnum{font-variant-numeric:tabular-nums}
   :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  /* cinematic hero band: AI-generated macro print footage behind the header,
-     dark in both themes so the light text always reads */
-  .heroband{position:relative;overflow:hidden;background:#171310 center/cover no-repeat;margin-bottom:18px}
+  .lbl{font-family:Inter,Arial,sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+  /* Sunnyday Technologies brand bar (canonical web shell: navy + green separator) */
+  .brandbar{position:sticky;top:0;z-index:40;background:#013a73;border-bottom:4px solid #97d700;box-shadow:0 2px 14px rgba(1,26,52,.25)}
+  .bb-in{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 20px}
+  .bb-logo img{height:17px;display:block;width:auto}
+  .bb-nav{display:flex;gap:22px}
+  .bb-nav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;letter-spacing:.02em;opacity:.92}
+  .bb-nav a:hover{opacity:1;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#97d700}
+  /* hero band: full-width footage under the brand bar, navy shade, light text */
+  .heroband{position:relative;overflow:hidden;background:#0a1826 center/cover no-repeat;margin-bottom:26px}
   .heroband video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s}
   .heroband video.on{opacity:1}
-  .heroband .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,12,10,.46) 0%,rgba(16,12,10,.62) 62%,rgba(16,12,10,.88) 100%)}
+  .heroband .shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,18,36,.52) 0%,rgba(2,18,36,.64) 60%,rgba(2,18,36,.9) 100%)}
   .heroband .wrap{position:relative;z-index:1}
-  header{padding:34px 0 22px;color:#f4f0ea}
-  header .eyebrow{color:#cdc4b8}
-  header .sub{color:#d8cfc3}
-  .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
-  .eyebrow .d{width:8px;height:8px;border-radius:2px;background:var(--accent)}
-  h1{font-size:clamp(23px,5.5vw,31px);line-height:1.12;letter-spacing:-.02em;margin:10px 0 6px;font-weight:800;text-shadow:0 1px 14px rgba(0,0,0,.35)}
-  .sub{color:var(--ink2);max-width:58ch;margin:0 0 14px;font-size:15.5px}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.16);border-radius:14px;overflow:hidden;margin:0;backdrop-filter:blur(8px)}
-  .stat{background:rgba(20,15,12,.55);padding:12px 12px;text-align:center;color:#f4f0ea}
-  .stat b{display:block;font-size:clamp(18px,4.5vw,24px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
-  .stat span{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:#b7ad9f}
+  header{padding:46px 0 30px;color:#fff}
+  header .eyebrow{color:#c8d6e2}
+  header .sub{color:#d5dfe8}
+  .eyebrow{font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
+  .eyebrow .d{width:9px;height:9px;border-radius:2px;background:#97d700}
+  h1{font-size:clamp(26px,5.5vw,38px);line-height:1.12;letter-spacing:-.02em;margin:12px 0 8px;font-weight:800;text-shadow:0 1px 16px rgba(0,10,20,.4)}
+  .sub{color:var(--ink2);max-width:60ch;margin:0 0 18px;font-size:16px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;margin:0;backdrop-filter:blur(8px)}
+  .stat{background:rgba(2,22,44,.55);padding:13px 12px;text-align:center;color:#fff}
+  .stat b{display:block;font-size:clamp(19px,4.5vw,26px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat span{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a9c3d8}
   .row{display:flex;gap:8px}
   #q{width:100%;min-height:56px;box-sizing:border-box;font-size:17px;padding:14px 16px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none;-webkit-appearance:none}
   #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
@@ -63,7 +75,7 @@
   #drop.on{display:block}
   .opt{padding:13px 16px;cursor:pointer;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--hair);font-size:16px}
   .opt:hover,.opt.hl{background:var(--accent-soft)}.opt b{font-weight:600}
-  .opt .fam{margin-left:auto;font:11px ui-monospace,Consolas,monospace;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .opt .fam{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
   .hint{color:var(--ink3);font-size:13.5px;margin:2px 2px 0}
   #scanbox,#ocrbox{margin-top:10px;display:none}#scanbox.on,#ocrbox.on{display:block}
   #reader,#ocrcam{width:100%;display:block;border-radius:12px;overflow:hidden}
@@ -76,19 +88,19 @@
   #editbox:empty{display:none}
   .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 8px}
   .fld{display:flex;flex-direction:column;gap:3px;min-width:0}
-  .fld label{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+  .fld label{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
   .fld input,.fld select,.fld textarea{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;font-family:inherit}
   .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--accent)}
   .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .rc-head{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
   .rc-head .name{font-size:21px;font-weight:800;letter-spacing:-.01em}.rc-head .name .brand{color:var(--accent)}
   .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-  .chip{font:11.5px ui-monospace,Consolas,monospace;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:5px;align-items:center}
+  .chip{font-size:11.5px;font-weight:600;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:5px;align-items:center}
   .chip.ok{color:var(--good);background:var(--good-soft);border-color:transparent}
-  .chip.warn{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+  .chip.warn{color:var(--warn);background:var(--warn-soft);border-color:transparent}
   .sw{display:flex;gap:5px;align-items:center;margin-top:10px;flex-wrap:wrap}
   .sw i{width:15px;height:15px;border-radius:5px;border:1px solid var(--hair);display:inline-block;flex-shrink:0}
-  .sw .swn{font:11px ui-monospace,Consolas,monospace;color:var(--ink3);margin-left:3px}
+  .sw .swn{font-size:11px;font-weight:600;color:var(--ink3);margin-left:3px}
   .goal{display:flex;gap:6px;padding:15px 20px 0}
   .goal button{flex:1;min-width:0;padding:12px 6px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink2);font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap}
   .goal button.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -99,7 +111,7 @@
   .delta{color:var(--accent);font-weight:600}
   .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--hair);margin-top:16px;border-top:1px solid var(--line)}
   .tile{background:var(--card);padding:13px 16px}
-  .tile .k{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+  .tile .k{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
   .tile .v{font-size:20px;font-weight:700;margin-top:3px}.tile .v .u{font-size:12px;color:var(--ink3);font-weight:600}
   .export{border-top:1px solid var(--line);padding:16px 20px 18px;background:var(--cool-soft)}
   .export h3{margin:0 0 3px;font-size:14px;display:flex;align-items:center;gap:7px}
@@ -111,7 +123,7 @@
   pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;overflow:auto;font:12px ui-monospace,Consolas,monospace;color:var(--ink2);margin:12px 0 0}
   .prov{padding:14px 20px 16px;color:var(--ink2);font-size:13.5px;border-top:1px solid var(--line)}.prov b{color:var(--ink)}
   footer{margin-top:40px;color:var(--ink3);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
-  footer h4{font:11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:18px 0 5px}
+  footer h4{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:18px 0 5px}
   footer h4:first-child{margin-top:0}
   footer p{margin:0 0 8px;line-height:1.55}
   .legalrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--hair)}
@@ -121,11 +133,21 @@
   #toast.on{opacity:1}
 </style>
 
+<div class="brandbar">
+  <div class="bb-in">
+    <a class="bb-logo" href="https://sunn3d.com" target="_blank" rel="noopener" aria-label="Sunnyday Technologies"><img src="sdt-wordmark-white.png" alt="Sunnyday Technologies"></a>
+    <nav class="bb-nav" aria-label="Site">
+      <a href="stats.html">Stats</a>
+      <a href="llms.txt">API</a>
+      <a href="https://github.com/sunnyday-technologies/paramat" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</div>
 <div class="heroband" id="heroband" style="background-image:url(hero.jpg)">
   <div class="shade"></div>
   <div class="wrap">
     <header>
-      <div class="eyebrow"><span class="d"></span> ParaMat · free &amp; open filament reference</div>
+      <div class="eyebrow"><span class="d"></span> ParaMat · open filament reference</div>
       <h1>Exact print settings for <em>your exact</em> filament.</h1>
       <p class="sub">Cross-checked consensus from open slicer + manufacturer data — not one vendor's defaults. Search or scan, tune for strength / finish / speed, export to your slicer or an NFC spool tag.</p>
       <div class="stats" role="group" aria-label="Database size">
@@ -184,6 +206,7 @@
       <a href="https://github.com/sunnyday-technologies/paramat/issues/new" target="_blank" rel="noopener">Report an issue</a>
       <span style="margin-left:auto">data CC BY 4.0 · code MIT</span>
     </div>
+    <p style="margin-top:14px;color:var(--ink3)">© 2026 <a href="https://sunn3d.com" target="_blank" rel="noopener" style="color:inherit">Sunnyday Technologies</a>. ParaMat is a Sunnyday open-data project.</p>
   </footer>
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
