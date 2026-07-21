@@ -37,6 +37,10 @@
   #reader,#ocrcam{width:100%;max-width:360px;margin:0 auto;display:block;border-radius:12px;overflow:hidden}
   #ocrcam{background:#000}
   #card{margin-top:22px;display:none}#card.on{display:block}
+  details.more{border-top:1px solid var(--line)}
+  details.more>summary{padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--cool);list-style:none}
+  details.more>summary::-webkit-details-marker{display:none}
+  details.more[open]>summary{color:var(--ink2)}
   .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .rc-head{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
   .rc-head .name{font-size:21px;font-weight:800;letter-spacing:-.01em}.rc-head .name .brand{color:var(--accent)}
@@ -295,6 +299,12 @@
     const hasR=m.nmin!=null&&m.nmax!=null&&m.nmax>m.nmin,gm=famMed[m.family],dl_=(m.noz!=null&&gm!=null)?m.noz-gm:null;
     const conf=m.ns>=2?`<span class="chip ok">✓ ${m.ns} sources</span>`:`<span class="chip warn">! single source</span>`;
     const slug=(m.brand+"_"+m.product).replace(/[^\w]+/g,"_").toLowerCase();
+    const ex=[];
+    const px=(k,v,u)=>{if(v!=null&&v!=="")ex.push(`<div class="tile"><div class="k">${k}</div><div class="v tnum">${v}${u?`<span class="u"> ${u}</span>`:""}</div></div>`)};
+    px("Nozzle 1st layer",m.noz_fl,"°C");px("Bed 1st layer",m.bed_fl,"°C");
+    px("Fan min",m.fan_lo!=null?m.fan_lo+"%":null,"");px("Fan max",m.fan_hi!=null?m.fan_hi+"%":null,"");
+    px("Retraction",m.retr,"mm");px("Retract spd",m.retr_v,"mm/s");px("Pressure adv.",m.pa,"");px("Softening",m.soft,"°C");
+    const extraHtml=ex.length?`<details class="more"><summary>Full profile — ${ex.length} more parameter${ex.length>1?"s":""}</summary><div class="tiles">${ex.join("")}</div></details>`:"";
     card.className="on";
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name"><span class="brand">${esc(m.brand)}</span> ${esc(m.product)}</div>
@@ -309,6 +319,7 @@
         <div class="tile"><div class="k">Max vol.</div><div class="v tnum">${m.mvs??"—"}<span class="u"> mm³/s</span></div></div>
         <div class="tile"><div class="k">Density</div><div class="v tnum">${m.dens??"—"}<span class="u"> g/cm³</span></div></div>
         ${m.chamber!=null?`<div class="tile"><div class="k">Chamber</div><div class="v tnum">${m.chamber}<span class="u"> °C</span></div></div>`:""}</div>
+      ${extraHtml}
       <div class="export">
         <h3>🏷️ Assign to a reusable RFID tag</h3>
         <div class="note">Write these conditions to an NFC tag on your spool. OpenPrintTag = the open standard (Prusa, MIT); OpenSpool JSON writes directly and drives a Bambu AMS via the OpenSpool bridge.</div>
