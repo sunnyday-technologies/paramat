@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ParaMat — Terms &amp; Privacy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
+<style>
+  :root{color-scheme:light;
+    --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
+    --line:#e7e2d9;--accent:#d8531f;--cool:#2a6fb0}
+  @media(prefers-color-scheme:dark){:root{
+    --page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
+    --line:#302b26;--accent:#f0703c;--cool:#5fa1dc;color-scheme:dark}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px 60px}
+  .wrap{max-width:680px;margin:0 auto}
+  header{padding:28px 0 4px}
+  .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  h1{font-size:clamp(22px,5vw,28px);letter-spacing:-.02em;margin:8px 0 4px;font-weight:800}
+  h2{font-size:18px;margin:30px 0 8px;letter-spacing:-.01em}
+  h3{font-size:15px;margin:18px 0 6px}
+  p,li{color:var(--ink2);margin:0 0 10px}
+  ul{padding-left:20px}
+  a{color:var(--cool)}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:14px 0}
+  .small{color:var(--ink3);font-size:13px;margin-top:34px;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ParaMat · legal</div>
+    <h1>Terms of Use &amp; Privacy</h1>
+    <p><a href="./">← Back to the tool</a> · Last updated 2026-07-21</p>
+  </header>
+
+  <h2>Terms of Use</h2>
+  <p>ParaMat is a free, open reference of 3D-printing filament settings, operated by
+    Sunnyday Technologies. By using it you agree to these terms.</p>
+  <h3>No warranty — verify before you print</h3>
+  <p>All values are <b>aggregated consensus suggestions</b> derived from public, openly licensed
+    sources. They are provided <b>“AS&nbsp;IS”, without warranty of any kind</b>, express or implied —
+    including fitness for a particular purpose. They are a <i>starting point, not a guarantee</i>:
+    filaments vary by batch, printer, and environment.</p>
+  <ul>
+    <li>Always verify with a small calibration print (temperature tower, flow test) before committing.</li>
+    <li><b>Never exceed</b> your filament's or your printer/hotend's manufacturer-rated limits.</li>
+    <li>You are solely responsible for the settings you apply, including anything you write to an
+      NFC/RFID tag or import into a slicer. ParaMat and Sunnyday Technologies are not liable for
+      failed prints, material waste, or equipment damage.</li>
+  </ul>
+  <h3>Licenses</h3>
+  <ul>
+    <li><b>Aggregated output data</b> (what the tool shows and exports): <a href="https://creativecommons.org/licenses/by/4.0/">CC&nbsp;BY&nbsp;4.0</a> — attribute “ParaMat / Sunnyday Technologies”.</li>
+    <li><b>Tool code</b>: MIT, on <a href="https://github.com/sunnyday-technologies/paramat">GitHub</a>.</li>
+    <li>Upstream sources retain their own licenses (Open Filament Database·MIT, Cura materials·CC0,
+      slicer profile repos·AGPL-3.0 — used as aggregated statistics, never redistributed verbatim).</li>
+  </ul>
+
+  <h2>Privacy</h2>
+  <div class="note"><b>Short version:</b> no accounts, no cookies, no trackers, no personal data.
+    Your shelf stays on your device. Cameras are processed locally. The only data that can ever
+    leave your browser is an <b>opt-in</b>, anonymous “+1” counter — and its aggregate is public.</div>
+  <h3>What stays on your device</h3>
+  <ul>
+    <li><b>My filaments (shelf)</b> — stored in your browser's localStorage only. It is never
+      uploaded. Export/backup is a file download you control; “Share” builds a link containing the
+      data, which is only transmitted if you send that link to someone.</li>
+    <li><b>Barcode scan &amp; label OCR</b> — camera frames are processed entirely in your browser
+      (html5-qrcode, Tesseract.js). No image or video ever leaves your device. QR codes are parsed
+      for identity only; embedded URLs are never opened.</li>
+  </ul>
+  <h3>Opt-in anonymous usage counts (off by default)</h3>
+  <ul>
+    <li>If you tick “Share anonymous usage counts”, opening or exporting a material sends a single
+      event: <code>{event, brand|product, family, goal}</code> — nothing else.</li>
+    <li>We store <b>only per-month counters</b> per (event, material). We do not store your IP
+      address, user agent, or any identifier, and we set no cookies. There is nothing to link
+      events to you or to each other.</li>
+    <li>The entire aggregate is <a href="https://paramat-telemetry.nick-1d7.workers.dev/top">publicly
+      readable</a> — you can see exactly what we see. Untick the box to stop at any time.</li>
+    <li>Purpose: a neutral, cross-brand picture of which filaments the community actually uses,
+      published openly.</li>
+  </ul>
+  <h3>Hosting &amp; third parties</h3>
+  <ul>
+    <li>The site is static, served by GitHub Pages; the counter runs on Cloudflare Workers. Like any
+      web servers, they see standard request metadata in transit (e.g. IP) subject to
+      <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub's</a>
+      and <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's</a> policies — we do not
+      receive or store it.</li>
+    <li>The scanner and OCR libraries load from CDNs (unpkg, jsDelivr) only when you use those
+      features; those requests are subject to the CDNs' policies.</li>
+  </ul>
+  <h3>Contact</h3>
+  <p>Questions or corrections: <a href="https://github.com/sunnyday-technologies/paramat/issues">GitHub issues</a>.</p>
+
+  <p class="small">This page is a plain-language summary written in good faith; it is not a substitute
+    for legal advice.</p>
+</div>
+</body>
+</html>

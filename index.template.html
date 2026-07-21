@@ -1,5 +1,15 @@
-<title>ParaMat — Print Conditions & RFID</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ParaMat — exact print settings for your exact filament</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Free, open filament database: search or scan 3,700+ filaments, get cross-source consensus print settings (nozzle, bed, flow, drying), and export to your slicer or an NFC spool tag.">
+<link rel="canonical" href="https://sunnyday-technologies.github.io/paramat/">
+<meta property="og:title" content="ParaMat — exact print settings for your exact filament">
+<meta property="og:description" content="Search or scan 3,700+ filaments. Consensus print settings from open slicer + manufacturer data, exportable to Orca/Bambu or an NFC spool tag.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sunnyday-technologies.github.io/paramat/">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7f5f2">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131110">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
 <style>
   :root{color-scheme:light;
     --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
@@ -13,20 +23,32 @@
     --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--accent-soft:rgba(240,112,60,.16);
     --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}
   *{box-sizing:border-box}
-  body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 18px 80px}
-  .wrap{max-width:760px;margin:0 auto}.tnum{font-variant-numeric:tabular-nums}
-  header{padding:40px 0 6px}
+  body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
+    padding:0 16px calc(60px + env(safe-area-inset-bottom))}
+  .wrap{max-width:720px;margin:0 auto}.tnum{font-variant-numeric:tabular-nums}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  header{padding:26px 0 8px}
   .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
   .eyebrow .d{width:8px;height:8px;border-radius:2px;background:var(--accent)}
-  h1{font-size:clamp(25px,5vw,34px);line-height:1.08;letter-spacing:-.02em;margin:12px 0 6px;font-weight:800}
-  .sub{color:var(--ink2);max-width:58ch;margin:0 0 20px}
+  h1{font-size:clamp(23px,5.5vw,31px);line-height:1.12;letter-spacing:-.02em;margin:10px 0 6px;font-weight:800}
+  .sub{color:var(--ink2);max-width:58ch;margin:0 0 14px;font-size:15px}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--hair);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:0 0 16px}
+  .stat{background:var(--card);padding:10px 12px;text-align:center}
+  .stat b{display:block;font-size:clamp(16px,4vw,21px);font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .stat span{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3)}
   .row{display:flex;gap:8px}
-  #q{width:100%;box-sizing:border-box;font-size:17px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none}
+  #q{width:100%;min-height:52px;box-sizing:border-box;font-size:16px;padding:13px 16px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none;-webkit-appearance:none}
   #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:0 15px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;min-height:44px;padding:0 15px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;touch-action:manipulation}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
   .btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
-  .search{position:relative;margin-bottom:8px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+  @media(min-width:640px){.actions{grid-template-columns:repeat(4,1fr)}}
+  .actions .btn{min-height:48px}
+  .quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+  .quick button{border:1px solid var(--line);background:transparent;color:var(--ink2);border-radius:999px;padding:7px 13px;font-size:12.5px;cursor:pointer;min-height:34px}
+  .quick button:hover{border-color:var(--accent);color:var(--accent)}
+  .search{position:relative;margin-bottom:0}
   #drop{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.16);max-height:320px;overflow:auto;display:none}
   #drop.on{display:block}
   .opt{padding:10px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--hair)}
@@ -72,57 +94,84 @@
   .export{border-top:1px solid var(--line);padding:16px 20px 18px;background:var(--cool-soft)}
   .export h3{margin:0 0 3px;font-size:14px;display:flex;align-items:center;gap:7px}
   .export .note{color:var(--ink2);font-size:12.5px;margin:0 0 12px}
-  .exbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .exbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(min-width:640px){.exbtns{display:flex;flex-wrap:wrap}}
   .exbtns .btn{background:var(--card)}
   .exbtns .btn.pri{background:var(--cool);border-color:var(--cool);color:#fff}
   pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;overflow:auto;font:12px ui-monospace,Consolas,monospace;color:var(--ink2);margin:12px 0 0}
   .prov{padding:13px 20px 16px;color:var(--ink2);font-size:13px;border-top:1px solid var(--line)}.prov b{color:var(--ink)}
-  footer{margin-top:36px;color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
-  a{color:var(--cool)}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--page);padding:9px 16px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+  footer{margin-top:40px;color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line);padding-top:18px}
+  footer h4{font:11px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:18px 0 5px}
+  footer h4:first-child{margin-top:0}
+  footer p{margin:0 0 8px;line-height:1.55}
+  .legalrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--hair)}
+  .optin{display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink2);cursor:pointer;line-height:1.45}
+  .optin input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}
+  a{color:var(--cool)}#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--page);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88vw;z-index:50}
   #toast.on{opacity:1}
 </style>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow"><span class="d"></span> ParaMat · open reference · scan → conditions → RFID</div>
-    <h1>Ideal print conditions for <em>your exact</em> filament — ready to write to a tag.</h1>
-    <p class="sub">Search or scan a filament, get the brand-precise consensus conditions, then export them in <b>OpenPrintTag</b> or <b>OpenSpool</b> format to write onto a reusable NFC tag for your spool. Fully open, static, no server.</p>
+    <div class="eyebrow"><span class="d"></span> ParaMat · free &amp; open filament reference</div>
+    <h1>Exact print settings for <em>your exact</em> filament.</h1>
+    <p class="sub">Cross-checked consensus from open slicer + manufacturer data — not one vendor's defaults. Search or scan, tune for strength / finish / speed, export to your slicer or an NFC spool tag.</p>
+    <div class="stats" role="group" aria-label="Database size">
+      <div class="stat"><b id="st-products">—</b><span>products</span></div>
+      <div class="stat"><b id="st-colors">—</b><span>colors</span></div>
+      <div class="stat"><b id="st-skus">—</b><span>SKUs</span></div>
+    </div>
   </header>
 
   <div class="search">
     <div class="row">
-      <input id="q" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS, PVA">
+      <input id="q" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="false" aria-controls="drop" aria-label="Search filaments" placeholder="Search brand + material — e.g. Prusament PLA">
       <button class="btn" id="searchbtn">🔍 Search</button>
     </div>
-    <div id="drop"></div>
+    <div id="drop" role="listbox" aria-label="Search results"></div>
   </div>
-  <!-- camera boxes sit ABOVE the scan buttons: when a camera is open, its
+  <div class="quick" id="quick" aria-label="Popular searches">
+    <button data-q="Prusament PLA">Prusament PLA</button>
+    <button data-q="Bambu PLA Basic">Bambu PLA Basic</button>
+    <button data-q="eSUN PLA+">eSUN PLA+</button>
+    <button data-q="Polymaker PETG">Polymaker PETG</button>
+    <button data-q="Generic TPU">TPU</button>
+    <button data-q="Generic ASA">ASA</button>
+  </div>
+  <!-- camera boxes sit ABOVE the buttons: when a camera is open, its
        controls (capture / stop) are directly below the view, not above it -->
-  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
-  <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">📸 Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
-  <div class="row" style="margin-top:8px">
-    <button class="btn" id="scanbtn" style="flex:1;justify-content:center">📷 Scan barcode</button>
-    <button class="btn" id="ocrbtn" style="flex:1;justify-content:center">🔤 Read label</button>
+  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode…</div></div>
+  <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1">📸 Capture &amp; read label</button></div><div class="hint" id="ocrmsg" role="status"></div></div>
+  <div class="actions">
+    <button class="btn" id="scanbtn">📷 Scan barcode</button>
+    <button class="btn" id="ocrbtn">🔤 Read label</button>
+    <button class="btn" id="shelfbtn">🗄 My filaments (<span id="shelfcount">0</span>)</button>
+    <button class="btn" id="addbtn">＋ Add manually</button>
   </div>
-  <div class="hint"><span id="count"></span> · barcode works for <span id="gcount"></span> SKUs; <b>Read label</b> works for any spool — point at the printed name.</div>
-  <div class="row" style="margin-top:8px">
-    <button class="btn" id="shelfbtn" style="flex:1;justify-content:center">🗄 My filaments (<span id="shelfcount">0</span>)</button>
-    <button class="btn" id="addbtn" style="flex:1;justify-content:center">＋ Add manually</button>
-  </div>
+  <div class="hint">Barcode matches <span id="gcount"></span> SKUs · <b>Read label</b> works for any spool — point at the printed name.</div>
   <div id="editbox"></div>
   <div id="shelfpanel"></div>
 
   <div id="card"></div>
 
   <footer>
-    Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). RFID export: OpenPrintTag (MIT) and OpenSpool JSON. Not measured optima; single-source materials are flagged.
-    <br><br><b>Disclaimer.</b> Values are aggregated consensus suggestions, provided <b>AS IS</b> with no warranty — a <i>starting point, not a guarantee</i>. Always run a temperature tower / calibration print, and never exceed your filament's or hotend's rated limits. You are responsible for the settings you apply; ParaMat is not liable for failed prints or equipment damage.
-    <br><br><b>Max volumetric flow is also a hotend limit.</b> Verify with a quick extrude-in-air test at rising rates: the strand should coil out <i>soft</i> (fully melted); if it comes out <i>stiff/straight</i> you're past the melt capacity — slow down, run hotter, or fit a high-flow hotend. Method: <a href="https://ellis3dp.com/Print-Tuning-Guide/articles/determining_max_volumetric_flow_rate.html" target="_blank" rel="noopener">Ellis' Print Tuning Guide</a>.
+    <h4>Method</h4>
+    <p>Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). Not measured optima; single-source materials are flagged, and cross-confirmed ones show their source spread.</p>
+    <h4>Disclaimer</h4>
+    <p>Values are aggregated consensus suggestions, provided <b>AS IS</b> with no warranty — a <i>starting point, not a guarantee</i>. Always run a temperature tower / calibration print, and never exceed your filament's or hotend's rated limits. You are responsible for the settings you apply; ParaMat is not liable for failed prints or equipment damage.</p>
+    <p><b>Max volumetric flow is also a hotend limit.</b> Verify with a quick extrude-in-air test at rising rates: the strand should coil out <i>soft</i> (fully melted); if it comes out <i>stiff/straight</i> you're past the melt capacity — slow down, run hotter, or fit a high-flow hotend. Method: <a href="https://ellis3dp.com/Print-Tuning-Guide/articles/determining_max_volumetric_flow_rate.html" target="_blank" rel="noopener">Ellis' Print Tuning Guide</a>.</p>
+    <label class="optin"><input type="checkbox" id="telemopt">
+      <span><b>Share anonymous usage counts.</b> Off by default. When on, opening or exporting a material adds +1 to a public per-material counter — no IP, no cookies, no account, nothing personal. The full aggregate is <a href="https://paramat-telemetry.nick-1d7.workers.dev/top" target="_blank" rel="noopener">openly published</a>; it helps rank which filaments the community actually uses. Details in the <a href="legal.html">privacy notes</a>.</span></label>
+    <div class="legalrow">
+      <a href="legal.html">Terms &amp; privacy</a>
+      <a href="https://github.com/sunnyday-technologies/paramat" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/sunnyday-technologies/paramat/issues/new" target="_blank" rel="noopener">Report an issue</a>
+      <span style="margin-left:auto">data CC BY 4.0 · code MIT</span>
+    </div>
   </footer>
 </div>
-<div id="toast"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script id="d" type="application/json">__DATA__</script>
 <script>
 (function(){
@@ -155,9 +204,24 @@
   }
   function flameChip(text){const f=flameLabel(text);return f?`<span class="chip">🔥 ${esc(f)} · as stated</span>`:"";}
   const TOT=RAW.totals||{};
-  document.getElementById("count").textContent=DATA.length.toLocaleString()+" products"
-    +(TOT.colors?" · "+TOT.colors.toLocaleString()+" colors · "+TOT.skus.toLocaleString()+" SKUs":"");
+  document.getElementById("st-products").textContent=(TOT.products||DATA.length).toLocaleString();
+  document.getElementById("st-colors").textContent=(TOT.colors||0).toLocaleString();
+  document.getElementById("st-skus").textContent=(TOT.skus||0).toLocaleString();
   document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString();
+
+  // ---- opt-in anonymous telemetry (OFF by default; aggregate-only, no IP/UA/cookies stored;
+  //      the aggregate is public — see /top on the worker and legal.html) ----
+  const TELEM="https://paramat-telemetry.nick-1d7.workers.dev";
+  const TKEY="paramat_telemetry_v1";
+  const telemOn=()=>{try{return localStorage.getItem(TKEY)==="1"}catch(e){return false}};
+  function telem(e,m){if(!telemOn()||!m||!m.brand)return;
+    try{navigator.sendBeacon(TELEM+"/e",JSON.stringify({e,m:(m.brand||"")+"|"+(m.product||""),f:m.family||"",g:goal||""}))}catch(_){}}
+  const topt=document.getElementById("telemopt");
+  topt.checked=telemOn();
+  topt.onchange=()=>{try{localStorage.setItem(TKEY,topt.checked?"1":"0")}catch(e){}
+    toast(topt.checked?"Thanks — anonymous counts on":"Anonymous counts off")};
+
+  const slugOf=m=>((m.brand||"")+"_"+(m.product||"")).replace(/[^\w]+/g,"_").toLowerCase();
 
   const byFam={};DATA.forEach(m=>{if(m.noz!=null)(byFam[m.family]=byFam[m.family]||[]).push(m.noz)});
   const famMed={};for(const f in byFam){const a=byFam[f].sort((x,y)=>x-y);famMed[f]=a[a.length>>1]}
@@ -171,7 +235,7 @@
     const tk=t.split(/\s+/),r=[];for(const m of DATA){if(tk.every(k=>m._k.includes(k))){r.push(m);if(r.length>=40)break}}
     const fuzzy=!r.length;if(fuzzy)r.push(...fuzzyMatch(t,15));   // forgiving fallback: partial/word-order matches
     shown=r;hl=-1;drop.innerHTML=(fuzzy&&r.length?`<div class="opt" style="color:var(--ink3);cursor:default">No exact match — closest:</div>`:"")
-      +(r.length?r.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`);drop.classList.add("on")}
+      +(r.length?r.map((m,j)=>`<div class="opt" role="option" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`);drop.classList.add("on");q.setAttribute("aria-expanded","true")}
   q.addEventListener("input",()=>search(q.value));
   q.addEventListener("keydown",e=>{
     if(e.key==="Enter"){e.preventDefault();
@@ -184,16 +248,27 @@
   document.getElementById("searchbtn").onclick=()=>{
     search(q.value);
     if(shown.length===1)pick(shown[0]);else if(!q.value.trim())q.focus();};
+  // popular-search chips: run the search and jump to the top match
+  document.getElementById("quick").addEventListener("click",e=>{
+    const b=e.target.closest("button[data-q]");if(!b)return;
+    q.value=b.dataset.q;search(q.value);if(shown.length)pick(shown[0]);});
+  // "/" focuses search (unless typing in a field)
+  document.addEventListener("keydown",e=>{
+    if(e.key==="/"&&!/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)){e.preventDefault();q.focus()}});
   function paint(){const os=drop.querySelectorAll(".opt[data-j]");os.forEach((c,j)=>c.classList.toggle("hl",j===hl));if(hl>=0&&os[hl])os[hl].scrollIntoView({block:"nearest"})}
   drop.addEventListener("click",e=>{const o=e.target.closest(".opt");if(o&&o.dataset.j)pick(shown[+o.dataset.j])});
-  document.addEventListener("click",e=>{if(!e.target.closest(".search"))drop.classList.remove("on")});
+  document.addEventListener("click",e=>{if(!e.target.closest(".search")){drop.classList.remove("on");q.setAttribute("aria-expanded","false")}});
 
   // ---- barcode scan (html5-qrcode — cross-platform incl. iOS Safari) ----
   const scanbox=document.getElementById("scanbox"),scanmsg=document.getElementById("scanmsg");
-  let h5q=null,scanning=false;
+  let h5q=null,scanning=false,qrP=null;
+  function loadQr(){if(window.Html5Qrcode)return Promise.resolve();if(qrP)return qrP;
+    qrP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";s.onload=res;s.onerror=()=>{qrP=null;rej()};document.head.appendChild(s)});
+    return qrP}
   document.getElementById("scanbtn").onclick=async()=>{
     if(scanning){await stopScan();return}
-    if(!window.Html5Qrcode){toast("Scanner still loading — try again in a second.");return}
+    scanmsg.textContent="Loading scanner…";scanbox.classList.add("on");
+    try{await loadQr()}catch(e){toast("Scanner failed to load — check connection.");scanbox.classList.remove("on");return}
     const F=Html5QrcodeSupportedFormats;
     h5q=new Html5Qrcode("reader",{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.QR_CODE,F.CODE_128],verbose:false});
     scanbox.classList.add("on");scanning=true;scanmsg.textContent="Point the camera at the spool barcode…";
@@ -211,7 +286,7 @@
     const digits=raw.replace(/\D/g,"");
     if(/^\d{6,14}$/.test(digits) && !/https?:|[a-z]{4,}/i.test(raw)){
       for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
-        if(GTIN[c]!=null){stopScan();toast("Matched "+c);pick(DATA[GTIN[c]]);return}}
+        if(GTIN[c]!=null){stopScan();toast("Matched "+c);telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);return}}
     }
     // QR / alphanumeric code: extract identity from the text (e.g. a URL slug like
     // ".../prusament-petg-v0"), match to our data — no navigation, no fetch.
@@ -238,16 +313,30 @@
     loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
   };
   function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");document.getElementById("ocrbtn").textContent="🔤 Read label";}
+  // Labels are often sideways on the spool — retry OCR at 90°/270°/180° until a
+  // rotation yields temps or a database match.
+  function rotCanvas(cv,deg){if(!deg)return cv;const c=document.createElement("canvas");
+    if(deg===180){c.width=cv.width;c.height=cv.height}else{c.width=cv.height;c.height=cv.width}
+    const x=c.getContext("2d");x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);
+    x.drawImage(cv,-cv.width/2,-cv.height/2);return c}
   document.getElementById("ocrcap").onclick=async()=>{
     if(!ocrStream)return;
     ocrmsg.textContent="Reading…";
     try{await loadTess();
       const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
       cv.getContext("2d").drawImage(ocrcam,0,0);
-      const {data:{text}}=await Tesseract.recognize(cv,"eng");
-      const parsed=parseLabel(text),cands=fuzzyMatch(text,8);stopOcr();
-      if(parsed.noz||parsed.bed||cands.length){toast("Read label");renderLabelResult(parsed,cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
-      else showCandidates([],"Couldn't read \""+text.trim().slice(0,36).replace(/\n/g," ")+"\" — try again with better light, or search.");
+      let best=null,firstText="";
+      for(const deg of [0,90,270,180]){
+        if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
+        const {data:{text}}=await Tesseract.recognize(rotCanvas(cv,deg),"eng");
+        if(!deg)firstText=text;
+        const parsed=parseLabel(text),cands=fuzzyMatch(fixOcr(text),8);
+        const score=(parsed.noz?2:0)+(parsed.bed?1:0)+(cands.length?1:0);
+        if(score>0){best={parsed,cands};break}
+      }
+      stopOcr();
+      if(best){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else showCandidates([],"Couldn't read \""+firstText.trim().slice(0,36).replace(/\n/g," ")+"\" — try again with better light, or search.");
     }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
   };
   function fuzzyMatch(text,limit){
@@ -263,13 +352,25 @@
       : `<div class="opt" style="color:var(--ink3)">${esc(msg||"No match")}</div>`;
     drop.classList.add("on");
   }
-  // Extract the conditions the label itself prints (works for unbranded/exotic spools)
+  // Normalize common OCR confusions BEFORE parsing: ℃ ligature, letter-O for
+  // zero next to digits ("21O℃" → "210°C"), stray spacing inside numbers.
+  function fixOcr(t){return String(t)
+    .replace(/[℃]/g,"°C")
+    .replace(/\b(?=[\dOo]*\d)[\dOo]{2,4}\b/g,tok=>tok.replace(/[oO]/g,"0"));}
+  // Extract the conditions the label itself prints (works for unbranded/exotic spools).
+  // Plausibility guard: nozzle 140–500 °C, bed ≤150 °C — misreads (e.g. "21c"
+  // for "210 °C") are dropped rather than shown as garbage.
   function parseLabel(text){
-    const t=String(text).replace(/\s+/g," ");
+    const t=fixOcr(text).replace(/\s+/g," ");
     const fam=(t.match(/\b(PLA\+?|PETG|PET-?G|ABS|ASA|TPU|TPE|PVA|PVB|PPS(?:-?GF\d*|-?CF)?|PC|PA-?CF|PA\d*|PP|PEEK|PEKK|PCTG|HIPS|PSU|PPSU)\b/i)||[])[1]||null;
     const rng=re=>{const m=t.match(re);return m?(m[2]?[+m[1],+m[2]]:[+m[1],+m[1]]):null;};
-    const noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
-    const bed=rng(/(?:heat\s*bed|heatbed|\bbed\b)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
+    let noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend|extruder)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
+    let bed=rng(/(?:heat\s*bed|heatbed|\bbed\b|platform)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
+    if(noz&&!(noz[0]>=140&&noz[0]<=500&&noz[1]>=140&&noz[1]<=500))noz=null;
+    if(bed&&!(bed[0]>=0&&bed[1]<=150&&bed[0]<=bed[1]))bed=null;
+    // fallback: a bare plausible range like "210°C-240°C" is a nozzle range
+    if(!noz){const m2=t.match(/(\d{3})\s*(?:°\s*C)?\s*[-–~]\s*(\d{3})\s*°?\s*C/i);
+      if(m2){const r=[+m2[1],+m2[2]];if(r[0]>=140&&r[1]<=500&&r[0]<=r[1])noz=r;}}
     const spd=(t.match(/(\d{2,4})\s*mm\s*\/?\s*s/i)||[])[1];
     return {fam,noz,bed,spd:spd?+spd:null,flame:flameLabel(text)};
   }
@@ -403,10 +504,16 @@
         const cur=shelfGet(),ids=new Set(cur.map(x=>x.id));imp.forEach(x=>{if(!x.id||ids.has(x.id))x.id=newId();cur.push(x)});shelfSet(cur);toast("Imported "+imp.length);}
       history.replaceState(null,"",location.pathname);}catch(e){}})();
   updateShelf();
+  // deep link: #m=<slug> opens a material directly (shareable URLs)
+  (function(){const h=location.hash.match(/#m=(\w+)/);if(!h)return;
+    const m=DATA.find(x=>slugOf(x)===h[1]);if(m)pick(m);})();
 
   // ---- result + export ----
   let cur=null,goal="balanced";
-  function pick(m){cur=m;goal="balanced";q.value=m.brand+" "+m.product;drop.classList.remove("on");render();card.scrollIntoView({behavior:"smooth",block:"nearest"})}
+  function pick(m){cur=m;goal="balanced";q.value=m.brand+" "+m.product;drop.classList.remove("on");render();
+    try{history.replaceState(null,"","#m="+slugOf(m))}catch(e){}   // shareable deep link
+    telem("pick",m);
+    card.scrollIntoView({behavior:"smooth",block:"nearest"})}
 
   function optRecord(m){
     const r={material_class:"FFF"};
@@ -446,8 +553,11 @@
     else if(goal==="fast"){temp=m.strength_noz??m.noz;note=`Run to the material's max volumetric flow${vspd?` (≈ ${vspd} mm/s at 0.2×0.4 mm)`:""} and the hot end of the range so the melt keeps up — but confirm your hotend can hit it (see the flow-test note below).`}
     else{temp=m.noz;note="Cross-source consensus — a balanced starting point."}
     const hasR=m.nmin!=null&&m.nmax!=null&&m.nmax>m.nmin,gm=famMed[m.family],dl_=(m.noz!=null&&gm!=null)?m.noz-gm:null;
-    const conf=m.ns>=2?`<span class="chip ok">✓ ${m.ns} sources</span>`:`<span class="chip warn">! single source</span>`;
-    const slug=(m.brand+"_"+m.product).replace(/[^\w]+/g,"_").toLowerCase();
+    // trust signal: cross-source spread (IQR) — tight spread = strong agreement
+    const conf=m.ns>=2
+      ?`<span class="chip ok">✓ ${m.ns} sources · ${m.niqr!=null?`within ${m.niqr} °C`:"exact match"}</span>`
+      :`<span class="chip warn">! single source</span>`;
+    const slug=slugOf(m);
     const ex=[];
     const px=(k,v,u)=>{if(v!=null&&v!=="")ex.push(`<div class="tile"><div class="k">${k}</div><div class="v tnum">${v}${u?`<span class="u"> ${u}</span>`:""}</div></div>`)};
     px("Nozzle 1st layer",m.noz_fl,"°C");px("Bed 1st layer",m.bed_fl,"°C");
@@ -483,13 +593,14 @@
         </div>
         <pre id="preview">${esc(optYaml(m))}</pre>
       </div>
-      <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?"Independent sources agree within the range — use the spread as uncertainty.":"Only one source has this material — treat as a starting point and verify a small print."}</div>
+      <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?`Independent sources agree ${m.niqr!=null?`within <b>${m.niqr} °C</b> on nozzle${m.biqr!=null?` / <b>${m.biqr} °C</b> on bed`:""}`:"exactly"} — use the spread as uncertainty.`:"Only one source has this material — treat as a starting point and verify a small print."}
+        <br><a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">✎ Spot an error? Suggest a correction</a></div>
     </div>`;
     card.querySelectorAll(".goal button").forEach(b=>b.onclick=()=>{goal=b.dataset.g;render()});
-    document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record")};
-    document.getElementById("dos").onclick=()=>{navigator.clipboard.writeText(JSON.stringify(openSpool(m))).then(()=>toast("OpenSpool JSON copied"))};
+    document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record");telem("export_opt",m)};
+    document.getElementById("dos").onclick=()=>{navigator.clipboard.writeText(JSON.stringify(openSpool(m))).then(()=>toast("OpenSpool JSON copied"));telem("export_os",m)};
     document.getElementById("nfc").onclick=()=>writeNFC(m);
-    document.getElementById("dorca").onclick=()=>{dl(slug+".orca.json",JSON.stringify(orcaProfile(m,temp),null,2),"application/json");toast("Slicer profile downloaded — import in Orca/Bambu");};
+    document.getElementById("dorca").onclick=()=>{dl(slug+".orca.json",JSON.stringify(orcaProfile(m,temp),null,2),"application/json");toast("Slicer profile downloaded — import in Orca/Bambu");telem("export_orca",m)};
     document.getElementById("saveshelf").onclick=()=>shelfAdd({name:m.brand+" "+m.product,family:m.family,brand:m.brand,noz:(m.nmin!=null&&m.nmax!=null)?[m.nmin,m.nmax]:temp,bed:m.bed,flow:m.flow,mvs:m.mvs,retr:m.retr,fan_lo:m.fan_lo,fan_hi:m.fan_hi,pa:m.pa,source:"db"});
   }
   async function writeNFC(m){
@@ -501,7 +612,7 @@
     try{const w=new NDEFReader();
       const payload=Object.assign({},os,{source:"ParaMat consensus (verify before use)"});
       await w.write({records:[{recordType:"mime",mediaType:"application/json",data:new TextEncoder().encode(JSON.stringify(payload))}]});
-      toast("Written — verify on your printer before printing.");}
+      toast("Written — verify on your printer before printing.");telem("nfc_write",m);}
     catch(e){toast("NFC write failed: "+e.message)}
   }
 })();
