@@ -34,7 +34,7 @@
   .opt .fam{margin-left:auto;font:11px ui-monospace,Consolas,monospace;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
   .hint{color:var(--ink3);font-size:13px;margin:2px 2px 0}
   #scanbox,#ocrbox{margin-top:10px;display:none}#scanbox.on,#ocrbox.on{display:block}
-  #reader,#ocrcam{width:100%;max-width:360px;margin:0 auto;display:block;border-radius:12px;overflow:hidden}
+  #reader,#ocrcam{width:100%;display:block;border-radius:12px;overflow:hidden}
   #ocrcam{background:#000}
   #card{margin-top:22px;display:none}#card.on{display:block}
   details.more{border-top:1px solid var(--line)}
@@ -152,7 +152,7 @@
   const TOT=RAW.totals||{};
   document.getElementById("count").textContent=DATA.length.toLocaleString()+" products"
     +(TOT.colors?" · "+TOT.colors.toLocaleString()+" colors · "+TOT.skus.toLocaleString()+" SKUs":"");
-  document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString()+" SKUs";
+  document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString();
 
   const byFam={};DATA.forEach(m=>{if(m.noz!=null)(byFam[m.family]=byFam[m.family]||[]).push(m.noz)});
   const famMed={};for(const f in byFam){const a=byFam[f].sort((x,y)=>x-y);famMed[f]=a[a.length>>1]}
@@ -183,7 +183,8 @@
     const F=Html5QrcodeSupportedFormats;
     h5q=new Html5Qrcode("reader",{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.QR_CODE,F.CODE_128],verbose:false});
     scanbox.classList.add("on");scanning=true;scanmsg.textContent="Point the camera at the spool barcode…";
-    try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:160}},
+    // scan region = (nearly) the whole camera view — a small centered box wastes the frame
+    try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.floor(h*.94)})},
       t=>onScan(String(t)),()=>{});}
     catch(e){toast("Allow camera access to scan.");await stopScan();}
   };
