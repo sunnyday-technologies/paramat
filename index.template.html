@@ -21,7 +21,7 @@
   h1{font-size:clamp(25px,5vw,34px);line-height:1.08;letter-spacing:-.02em;margin:12px 0 6px;font-weight:800}
   .sub{color:var(--ink2);max-width:58ch;margin:0 0 20px}
   .row{display:flex;gap:8px}
-  #q{flex:1;font-size:17px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none}
+  #q{width:100%;box-sizing:border-box;font-size:17px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none}
   #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:0 15px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
   .btn:hover{border-color:var(--accent);color:var(--accent)}
@@ -33,8 +33,9 @@
   .opt:hover,.opt.hl{background:var(--accent-soft)}.opt b{font-weight:600}
   .opt .fam{margin-left:auto;font:11px ui-monospace,Consolas,monospace;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
   .hint{color:var(--ink3);font-size:13px;margin:2px 2px 0}
-  #scanbox{margin-top:10px;display:none}#scanbox.on{display:block}
-  #reader{width:100%;max-width:360px;margin:0 auto;border-radius:12px;overflow:hidden}
+  #scanbox,#ocrbox{margin-top:10px;display:none}#scanbox.on,#ocrbox.on{display:block}
+  #reader,#ocrcam{width:100%;max-width:360px;margin:0 auto;display:block;border-radius:12px;overflow:hidden}
+  #ocrcam{background:#000}
   #card{margin-top:22px;display:none}#card.on{display:block}
   .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .rc-head{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
@@ -76,14 +77,16 @@
   </header>
 
   <div class="search">
-    <div class="row">
-      <input id="q" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS">
-      <button class="btn" id="scanbtn" title="Scan barcode"><svg viewBox="0 0 24 24"><path d="M3 5v14M8 5v14M12 5v14M17 5v14M21 5v14"/></svg> Scan</button>
-    </div>
+    <input id="q" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS, PVA">
     <div id="drop"></div>
   </div>
-  <div class="hint"><span id="count"></span> · <span id="gcount"></span> with barcodes · type or tap Scan.</div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" id="scanbtn" style="flex:1;justify-content:center">📷 Scan barcode</button>
+    <button class="btn" id="ocrbtn" style="flex:1;justify-content:center">🔤 Read label</button>
+  </div>
+  <div class="hint"><span id="count"></span> · barcode works for <span id="gcount"></span> SKUs; <b>Read label</b> works for any spool — point at the printed name.</div>
   <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
+  <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
 
   <div id="card"></div>
 
@@ -141,7 +144,50 @@
     if(!code)return;
     for(const c of [code,code.replace(/^0+/,""),"0"+code,"00"+code]){
       if(GTIN[c]!=null){stopScan();toast("Matched "+c);pick(DATA[GTIN[c]]);return}}
-    scanmsg.textContent="Scanned "+code+" — not in our database yet. Search by name instead.";
+    scanmsg.textContent="Scanned "+code+" — not a known product code (may be a lot/batch number). Try Read label or search.";
+  }
+
+  // ---- label OCR (Tesseract.js, lazy-loaded) — works for ANY spool ----
+  const ocrbox=document.getElementById("ocrbox"),ocrcam=document.getElementById("ocrcam"),ocrmsg=document.getElementById("ocrmsg");
+  let ocrStream=null,tessP=null;
+  function loadTess(){if(window.Tesseract)return Promise.resolve();if(tessP)return tessP;
+    ocrmsg.textContent="Loading OCR engine (first use, ~once)…";
+    tessP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+    return tessP;}
+  document.getElementById("ocrbtn").onclick=async()=>{
+    if(ocrStream){stopOcr();return}
+    if(scanning)await stopScan();
+    try{ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});}
+    catch(e){toast("Allow camera access.");return}
+    ocrcam.srcObject=ocrStream;await ocrcam.play();ocrbox.classList.add("on");
+    ocrmsg.textContent="Fill the frame with the brand/material text, then Capture.";
+    loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
+  };
+  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");}
+  document.getElementById("ocrcap").onclick=async()=>{
+    if(!ocrStream)return;
+    ocrmsg.textContent="Reading…";
+    try{await loadTess();
+      const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
+      cv.getContext("2d").drawImage(ocrcam,0,0);
+      const {data:{text}}=await Tesseract.recognize(cv,"eng");
+      const cands=fuzzyMatch(text,8);stopOcr();
+      if(cands.length){toast("Read: "+text.trim().split(/\s+/).slice(0,4).join(" "));showCandidates(cands);q.scrollIntoView({block:"nearest"});}
+      else showCandidates([],"Couldn't match \""+text.trim().slice(0,40).replace(/\n/g," ")+"\" — try search.");
+    }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
+  };
+  function fuzzyMatch(text,limit){
+    const words=[...new Set(String(text).toLowerCase().replace(/[^a-z0-9+]+/g," ").split(/\s+/).filter(w=>w.length>1))];
+    if(!words.length)return[];
+    return DATA.map(m=>{let s=0;for(const w of words){if(m._k.includes(w))s+=(w.length>=4?3:w.length>=3?2:1);}return{m,s};})
+      .filter(x=>x.s>=2).sort((a,b)=>b.s-a.s).slice(0,limit||8).map(x=>x.m);
+  }
+  function showCandidates(list,msg){
+    shown=list;hl=-1;
+    drop.innerHTML=list.length
+      ? list.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join("")
+      : `<div class="opt" style="color:var(--ink3)">${esc(msg||"No match")}</div>`;
+    drop.classList.add("on");
   }
 
   // ---- result + export ----
