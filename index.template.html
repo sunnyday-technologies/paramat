@@ -29,6 +29,8 @@
     --cool:#63a9e8;--cool-soft:rgba(99,169,232,.12);--good:#a5dc2e;--good-soft:rgba(151,215,0,.14);
     --warn:#d9a441;--warn-soft:rgba(217,164,65,.13);color-scheme:dark}
   *{box-sizing:border-box}
+  html,body{overflow-x:clip}
+  img{max-width:100%}
   body{margin:0;background:var(--page);color:var(--ink);font:16.5px/1.6 Inter,-apple-system,"Segoe UI",Arial,sans-serif;
     padding:0 0 calc(60px + env(safe-area-inset-bottom))}
   .wrap{max-width:760px;margin:0 auto;padding:0 20px}.tnum{font-variant-numeric:tabular-nums}
@@ -36,10 +38,11 @@
   .lbl{font-family:Inter,Arial,sans-serif;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
   /* Sunnyday Technologies brand bar (canonical web shell: navy + green separator) */
   .brandbar{position:sticky;top:0;z-index:40;background:#013a73;border-bottom:4px solid #97d700;box-shadow:0 2px 14px rgba(1,26,52,.25)}
-  .bb-in{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 20px}
-  .bb-logo img{height:17px;display:block;width:auto}
-  .bb-nav{display:flex;gap:22px}
-  .bb-nav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;letter-spacing:.02em;opacity:.92}
+  .bb-in{max-width:1140px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 20px}
+  .bb-logo{flex:0 1 auto;min-width:0}
+  .bb-logo img{max-height:17px;max-width:100%;height:auto;width:auto;display:block}
+  .bb-nav{display:flex;gap:clamp(12px,3vw,22px);flex-shrink:0}
+  .bb-nav a{color:#fff;text-decoration:none;font-size:13.5px;font-weight:600;letter-spacing:.02em;opacity:.92;white-space:nowrap}
   .bb-nav a:hover{opacity:1;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#97d700}
   /* hero band: full-width footage under the brand bar, navy shade, light text */
   .heroband{position:relative;overflow:hidden;background:#0a1826 center/cover no-repeat;margin-bottom:26px}
@@ -54,7 +57,7 @@
   .eyebrow .d{width:9px;height:9px;border-radius:2px;background:#97d700}
   h1{font-size:clamp(26px,5.5vw,38px);line-height:1.12;letter-spacing:-.02em;margin:12px 0 8px;font-weight:800;text-shadow:0 1px 16px rgba(0,10,20,.4)}
   .brandline{display:flex;align-items:center;gap:14px;margin:16px 0 10px;flex-wrap:wrap}
-  .pm-mark{height:clamp(36px,7.5vw,62px);width:auto;display:block;filter:drop-shadow(0 2px 12px rgba(0,10,20,.45))}
+  .pm-mark{width:min(100%,560px);max-width:100%;height:auto;display:block;filter:drop-shadow(0 2px 12px rgba(0,10,20,.45))}
   .poly{font-size:clamp(13px,2.4vw,16px);font-weight:800;letter-spacing:.22em;color:#0c2233;background:#97d700;border-radius:6px;padding:6px 11px 5px;line-height:1}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
   .tagline{font-size:clamp(17px,3.4vw,21px);font-weight:600;margin:0 0 8px;color:#fff;text-shadow:0 1px 12px rgba(0,10,20,.4)}
@@ -286,12 +289,11 @@
 
   const slugOf=m=>((m.brand||"")+"_"+(m.product||"")).replace(/[^\w]+/g,"_").toLowerCase();
 
-  // hero video: only on larger screens, never for reduced-motion or data-saver
-  // users; fades in over the poster once it can play
+  // hero video on all screen sizes (1.9MB); still skipped for reduced-motion
+  // and data-saver users; fades in over the poster once it can play
   (function(){try{
     if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
     if(navigator.connection&&navigator.connection.saveData)return;
-    if(innerWidth<640)return;
     const v=document.createElement("video");
     v.muted=true;v.loop=true;v.playsInline=true;v.autoplay=true;v.preload="metadata";
     v.setAttribute("aria-hidden","true");v.src="hero.mp4?v=2";
