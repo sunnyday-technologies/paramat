@@ -234,6 +234,7 @@
     <p style="margin-top:14px;color:var(--ink3)">© 2026 <a href="https://sunn3d.com" target="_blank" rel="noopener" style="color:inherit">Sunnyday Technologies</a>. ParaMat is a Sunnyday open-data project.</p>
   </footer>
 </div>
+<div id="qrfile" style="display:none"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script id="d" type="application/json">__DATA__</script>
@@ -397,23 +398,50 @@
     if(deg===180){c.width=cv.width;c.height=cv.height}else{c.width=cv.height;c.height=cv.width}
     const x=c.getContext("2d");x.translate(c.width/2,c.height/2);x.rotate(deg*Math.PI/180);
     x.drawImage(cv,-cv.width/2,-cv.height/2);return c}
+  // Decode a QR in the captured frame (rotation-invariant) — labels often put
+  // identity in the QR while temps are printed text. Uses the same lazy-loaded
+  // scanner lib as the Scan button; SECURITY: text is parsed only, never opened.
+  async function qrFromCanvas(cv){
+    try{await loadQr();}catch(e){return null}
+    return new Promise(res=>{cv.toBlob(async b=>{
+      if(!b){res(null);return}
+      try{const f=new File([b],"cap.png",{type:"image/png"});
+        const q=new Html5Qrcode("qrfile",{verbose:false});
+        const r=await q.scanFileV2(f,false);q.clear();
+        res(r&&r.decodedText?String(r.decodedText):null);
+      }catch(e){res(null)}
+    },"image/png")});
+  }
   document.getElementById("ocrcap").onclick=async()=>{
     if(!ocrStream)return;
     ocrmsg.textContent="Reading…";
     try{await loadTess();
       const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
       cv.getContext("2d").drawImage(ocrcam,0,0);
+      const qrText=await qrFromCanvas(cv);            // free identity, if present
+      // Try ALL rotations and keep the BEST read — stopping at the first weak
+      // hit made sideways labels return names without their printed temps.
       let best=null,firstText="";
       for(const deg of [0,90,270,180]){
         if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
         const {data:{text}}=await Tesseract.recognize(rotCanvas(cv,deg),"eng");
         if(!deg)firstText=text;
         const parsed=parseLabel(text),cands=fuzzyMatch(fixOcr(text),8);
-        const score=(parsed.noz?2:0)+(parsed.bed?1:0)+(cands.length?1:0);
-        if(score>0){best={parsed,cands};break}
+        const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
+        if(!best||score>best.score)best={parsed,cands,score};
+        if(parsed.noz)break;                          // printed temps found — done
+      }
+      if(qrText){
+        const digits=qrText.replace(/\D/g,"");
+        if(/^\d{6,14}$/.test(digits)){
+          for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
+            if(GTIN[c]!=null){stopOcr();toast("Matched via QR");telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);return}}
+        }
+        const qc=fuzzyMatch(qrText,8);                // URL slugs carry the product name
+        if(qc.length)best.cands=[...new Map([...qc,...(best.cands||[])].map(m=>[m._i,m])).values()].slice(0,8);
       }
       stopOcr();
-      if(best){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
       else showCandidates([],"Couldn't read \""+firstText.trim().slice(0,36).replace(/\n/g," ")+"\" — try again with better light, or search.");
     }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
   };
