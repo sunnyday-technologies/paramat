@@ -1,4 +1,4 @@
-<title>ParaMat — exact print settings for your exact filament</title>
+<title>PARAMAT3D Poly — exact print settings for your exact filament</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Free, open filament database: search or scan 3,700+ filaments, get cross-source consensus print settings (nozzle, bed, flow, drying), and export to your slicer or an NFC spool tag.">
 <link rel="canonical" href="https://paramat3d.com/">
@@ -53,6 +53,11 @@
   .eyebrow{font-family:Inter,Arial,sans-serif;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
   .eyebrow .d{width:9px;height:9px;border-radius:2px;background:#97d700}
   h1{font-size:clamp(26px,5.5vw,38px);line-height:1.12;letter-spacing:-.02em;margin:12px 0 8px;font-weight:800;text-shadow:0 1px 16px rgba(0,10,20,.4)}
+  .brandline{display:flex;align-items:center;gap:14px;margin:16px 0 10px;flex-wrap:wrap}
+  .pm-mark{height:clamp(36px,7.5vw,62px);width:auto;display:block;filter:drop-shadow(0 2px 12px rgba(0,10,20,.45))}
+  .poly{font-size:clamp(13px,2.4vw,16px);font-weight:800;letter-spacing:.22em;color:#0c2233;background:#97d700;border-radius:6px;padding:6px 11px 5px;line-height:1}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .tagline{font-size:clamp(17px,3.4vw,21px);font-weight:600;margin:0 0 8px;color:#fff;text-shadow:0 1px 12px rgba(0,10,20,.4)}
   .sub{color:var(--ink2);max-width:60ch;margin:0 0 18px;font-size:16px}
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.18);border-radius:10px;overflow:hidden;margin:0;backdrop-filter:blur(8px)}
   .stat{background:rgba(2,22,44,.55);padding:13px 12px;text-align:center;color:#fff}
@@ -147,8 +152,9 @@
   <div class="shade"></div>
   <div class="wrap">
     <header>
-      <div class="eyebrow"><span class="d"></span> ParaMat · open filament reference</div>
-      <h1>Exact print settings for <em>your exact</em> filament.</h1>
+      <div class="eyebrow"><span class="d"></span> Open polymer filament reference</div>
+      <h1 class="brandline"><img class="pm-mark" src="paramat3d-wordmark-white.png" alt="PARAMAT3D"><span class="poly">POLY</span><span class="sr">PARAMAT3D Poly — exact print settings for your exact filament</span></h1>
+      <p class="tagline">Exact print settings for <em>your exact</em> filament.</p>
       <p class="sub">Cross-checked consensus from open slicer + manufacturer data — not one vendor's defaults. Search or scan, tune for strength / finish / speed, export to your slicer or an NFC spool tag.</p>
       <div class="stats" role="group" aria-label="Database size">
         <div class="stat"><b id="st-products">—</b><span>products</span></div>
@@ -203,6 +209,7 @@
       <a href="stats.html">📊 Usage stats</a>
       <a href="legal.html">Terms &amp; privacy</a>
       <a href="https://github.com/sunnyday-technologies/paramat" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/sunnyday-technologies/paramat/blob/main/CONTRIBUTING.md#certified-test-results-mechanical--property-data" target="_blank" rel="noopener">Contribute test data</a>
       <a href="https://github.com/sunnyday-technologies/paramat/issues/new" target="_blank" rel="noopener">Report an issue</a>
       <span style="margin-left:auto">data CC BY 4.0 · code MIT</span>
     </div>
