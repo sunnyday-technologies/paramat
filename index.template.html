@@ -200,6 +200,21 @@
   <footer>
     <h4>Method</h4>
     <p>Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). Not measured optima; single-source materials are flagged, and cross-confirmed ones show their source spread.</p>
+    <h4>Open RFID ecosystem — tags &amp; readers</h4>
+    <p>ParaMat3D writes <b>open, unencrypted</b> spool tags — no proprietary chips. Use any
+      <b>NTAG215 or NTAG216</b> NFC sticker (504/888&nbsp;bytes; the smaller NTAG213 can be too tight
+      for some records). Write tags right here with an NFC-capable <b>Android phone in Chrome</b>
+      ("Write to NFC tag" on any material). To read tags at the printer, the community projects below
+      pair an <b>ESP32 + PN532</b> reader (~$10 in parts) or their own boards:
+      <a href="https://github.com/spuder/OpenSpool" target="_blank" rel="noopener">OpenSpool</a> (drives a
+      Bambu AMS via its bridge) ·
+      <a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a> (the open
+      tag standard we export, MIT) ·
+      <a href="https://github.com/Donkie/Spoolman" target="_blank" rel="noopener">Spoolman</a> (inventory
+      server many readers integrate with) ·
+      <a href="https://github.com/Bambu-Research-Group/RFID-Tag-Guide" target="_blank" rel="noopener">Bambu
+      RFID research</a> (documents the proprietary tags). We don't sell or endorse specific hardware —
+      any standards-compliant tag works.</p>
     <h4>Disclaimer</h4>
     <p>Values are aggregated consensus suggestions, provided <b>AS IS</b> with no warranty — a <i>starting point, not a guarantee</i>. Always run a temperature tower / calibration print, and never exceed your filament's or hotend's rated limits. You are responsible for the settings you apply; ParaMat is not liable for failed prints or equipment damage.</p>
     <p><b>Max volumetric flow is also a hotend limit.</b> Verify with a quick extrude-in-air test at rising rates: the strand should coil out <i>soft</i> (fully melted); if it comes out <i>stiff/straight</i> you're past the melt capacity — slow down, run hotter, or fit a high-flow hotend. Method: <a href="https://ellis3dp.com/Print-Tuning-Guide/articles/determining_max_volumetric_flow_rate.html" target="_blank" rel="noopener">Ellis' Print Tuning Guide</a>.</p>
