@@ -49,7 +49,7 @@
   .chip.ok{color:var(--good);background:var(--good-soft);border-color:transparent}
   .chip.warn{color:var(--accent);background:var(--accent-soft);border-color:transparent}
   .goal{display:flex;gap:6px;padding:15px 20px 0}
-  .goal button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink2);font-size:13px;font-weight:600;cursor:pointer}
+  .goal button{flex:1;min-width:0;padding:9px 4px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .goal button.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .goal-note{padding:9px 20px 0;color:var(--ink2);font-size:13px;min-height:16px}
   .hero{padding:12px 20px 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -292,9 +292,11 @@
   function dl(name,text,mime){const b=new Blob([text],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
 
   function render(){const m=cur;if(!m)return;
+    const vspd=m.mvs!=null?Math.round(m.mvs/0.08):null;   // implied max speed @0.2×0.4 mm
     let temp,note;
     if(goal==="strength"){temp=m.strength_noz??m.noz;note="Higher nozzle temp → stronger interlayer bond (~+20 °C headroom before quality fails)."}
     else if(goal==="finish"){temp=m.nmin??m.noz;note="Lower nozzle temp → cleaner surface, less stringing, some strength cost."}
+    else if(goal==="fast"){temp=m.strength_noz??m.noz;note=`Run to the material's max volumetric flow${vspd?` (≈ ${vspd} mm/s at 0.2×0.4 mm)`:""} and the hot end of the range so the melt keeps up.`}
     else{temp=m.noz;note="Cross-source consensus — a balanced starting point."}
     const hasR=m.nmin!=null&&m.nmax!=null&&m.nmax>m.nmin,gm=famMed[m.family],dl_=(m.noz!=null&&gm!=null)?m.noz-gm:null;
     const conf=m.ns>=2?`<span class="chip ok">✓ ${m.ns} sources</span>`:`<span class="chip warn">! single source</span>`;
@@ -309,14 +311,14 @@
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name"><span class="brand">${esc(m.brand)}</span> ${esc(m.product)}</div>
         <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}</div></div>
-      <div class="goal">${["balanced","strength","finish"].map(g=>`<button data-g="${g}" class="${g===goal?"on":""}">${g[0].toUpperCase()+g.slice(1)}${g==="balanced"?" ★":""}</button>`).join("")}</div>
+      <div class="goal">${["balanced","strength","finish","fast"].map(g=>`<button data-g="${g}" class="${g===goal?"on":""}">${g[0].toUpperCase()+g.slice(1)}${g==="balanced"?" ★":""}</button>`).join("")}</div>
       <div class="goal-note">${note}</div>
       <div class="hero"><div class="big tnum">${temp??"—"}<span class="u"> °C</span></div>
         <div class="rng">nozzle${hasR?` · range <b>${m.nmin}–${m.nmax} °C</b>`:``}${dl_!=null&&Math.abs(dl_)>=3?`<br><span class="delta">${dl_>0?"+":""}${dl_} °C vs generic ${esc(m.family)}</span>`:``}</div></div>
       <div class="tiles">
         <div class="tile"><div class="k">Bed</div><div class="v tnum">${m.bed??"—"}<span class="u"> °C</span></div></div>
         <div class="tile"><div class="k">Flow</div><div class="v tnum">${m.flow??"—"}</div></div>
-        <div class="tile"><div class="k">Max vol.</div><div class="v tnum">${m.mvs??"—"}<span class="u"> mm³/s</span></div></div>
+        <div class="tile"><div class="k">Max vol. flow</div><div class="v tnum">${m.mvs??"—"}<span class="u"> mm³/s</span></div>${vspd?`<div style="font-size:11px;color:var(--ink3);margin-top:2px">≈ ${vspd} mm/s @0.2×0.4</div>`:""}</div>
         <div class="tile"><div class="k">Density</div><div class="v tnum">${m.dens??"—"}<span class="u"> g/cm³</span></div></div>
         ${m.chamber!=null?`<div class="tile"><div class="k">Chamber</div><div class="v tnum">${m.chamber}<span class="u"> °C</span></div></div>`:""}</div>
       ${extraHtml}
