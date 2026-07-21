@@ -90,16 +90,21 @@
   </header>
 
   <div class="search">
-    <input id="q" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS, PVA">
+    <div class="row">
+      <input id="q" type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS, PVA">
+      <button class="btn" id="searchbtn">🔍 Search</button>
+    </div>
     <div id="drop"></div>
   </div>
+  <!-- camera boxes sit ABOVE the scan buttons: when a camera is open, its
+       controls (capture / stop) are directly below the view, not above it -->
+  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
+  <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">📸 Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
   <div class="row" style="margin-top:8px">
     <button class="btn" id="scanbtn" style="flex:1;justify-content:center">📷 Scan barcode</button>
     <button class="btn" id="ocrbtn" style="flex:1;justify-content:center">🔤 Read label</button>
   </div>
   <div class="hint"><span id="count"></span> · barcode works for <span id="gcount"></span> SKUs; <b>Read label</b> works for any spool — point at the printed name.</div>
-  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
-  <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
   <div class="row" style="margin-top:8px">
     <button class="btn" id="shelfbtn" style="flex:1;justify-content:center">🗄 My filaments (<span id="shelfcount">0</span>)</button>
     <button class="btn" id="addbtn" style="flex:1;justify-content:center">＋ Add manually</button>
@@ -164,13 +169,22 @@
   let shown=[],hl=-1;
   function search(t){t=t.trim().toLowerCase();if(!t){drop.classList.remove("on");return}
     const tk=t.split(/\s+/),r=[];for(const m of DATA){if(tk.every(k=>m._k.includes(k))){r.push(m);if(r.length>=40)break}}
-    shown=r;hl=-1;drop.innerHTML=r.length?r.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`;drop.classList.add("on")}
+    const fuzzy=!r.length;if(fuzzy)r.push(...fuzzyMatch(t,15));   // forgiving fallback: partial/word-order matches
+    shown=r;hl=-1;drop.innerHTML=(fuzzy&&r.length?`<div class="opt" style="color:var(--ink3);cursor:default">No exact match — closest:</div>`:"")
+      +(r.length?r.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`);drop.classList.add("on")}
   q.addEventListener("input",()=>search(q.value));
-  q.addEventListener("keydown",e=>{if(!shown.length)return;
+  q.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();
+      if(hl>=0&&shown[hl]){pick(shown[hl]);return}
+      search(q.value);if(shown.length)pick(shown[0]);return}   // standard search: Enter = top match
+    if(!shown.length)return;
     if(e.key==="ArrowDown"){hl=Math.min(hl+1,shown.length-1);paint();e.preventDefault()}
     else if(e.key==="ArrowUp"){hl=Math.max(hl-1,0);paint();e.preventDefault()}
-    else if(e.key==="Enter"&&hl>=0)pick(shown[hl]);else if(e.key==="Escape")drop.classList.remove("on")});
-  function paint(){[...drop.children].forEach((c,j)=>c.classList.toggle("hl",j===hl));if(hl>=0)drop.children[hl].scrollIntoView({block:"nearest"})}
+    else if(e.key==="Escape")drop.classList.remove("on")});
+  document.getElementById("searchbtn").onclick=()=>{
+    search(q.value);
+    if(shown.length===1)pick(shown[0]);else if(!q.value.trim())q.focus();};
+  function paint(){const os=drop.querySelectorAll(".opt[data-j]");os.forEach((c,j)=>c.classList.toggle("hl",j===hl));if(hl>=0&&os[hl])os[hl].scrollIntoView({block:"nearest"})}
   drop.addEventListener("click",e=>{const o=e.target.closest(".opt");if(o&&o.dataset.j)pick(shown[+o.dataset.j])});
   document.addEventListener("click",e=>{if(!e.target.closest(".search"))drop.classList.remove("on")});
 
@@ -183,12 +197,13 @@
     const F=Html5QrcodeSupportedFormats;
     h5q=new Html5Qrcode("reader",{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.QR_CODE,F.CODE_128],verbose:false});
     scanbox.classList.add("on");scanning=true;scanmsg.textContent="Point the camera at the spool barcode…";
+    document.getElementById("scanbtn").textContent="✕ Stop scanning";
     // scan region = (nearly) the whole camera view — a small centered box wastes the frame
     try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.floor(h*.94)})},
       t=>onScan(String(t)),()=>{});}
     catch(e){toast("Allow camera access to scan.");await stopScan();}
   };
-  async function stopScan(){scanning=false;if(h5q){try{await h5q.stop();h5q.clear();}catch(e){}h5q=null}scanbox.classList.remove("on");}
+  async function stopScan(){scanning=false;if(h5q){try{await h5q.stop();h5q.clear();}catch(e){}h5q=null}scanbox.classList.remove("on");document.getElementById("scanbtn").textContent="📷 Scan barcode";}
   // Handles both retail barcodes AND QR content. SECURITY: QR text is untrusted —
   // we only parse it for identity and NEVER navigate to or open any embedded URL.
   function onScan(raw){
@@ -218,10 +233,11 @@
     try{ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});}
     catch(e){toast("Allow camera access.");return}
     ocrcam.srcObject=ocrStream;await ocrcam.play();ocrbox.classList.add("on");
+    document.getElementById("ocrbtn").textContent="✕ Close camera";
     ocrmsg.textContent="Fill the frame with the brand/material text, then Capture.";
     loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
   };
-  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");}
+  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");document.getElementById("ocrbtn").textContent="🔤 Read label";}
   document.getElementById("ocrcap").onclick=async()=>{
     if(!ocrStream)return;
     ocrmsg.textContent="Reading…";
