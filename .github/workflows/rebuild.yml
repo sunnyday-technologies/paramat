@@ -1,24 +1,30 @@
-name: Rebuild tool on data change
+name: Rebuild & deploy tool
 on:
   workflow_dispatch:
   push:
     paths: [data.json, index.template.html, build.py]
 permissions:
-  contents: write
-concurrency: rebuild
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
 jobs:
-  build:
+  build-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - run: python build.py
-      - name: Commit rebuilt index.html
-        run: |
-          git config user.name "paramat-ci"
-          git config user.email "ci@sunn3d.com"
-          git add index.html
-          if git diff --cached --quiet; then echo "no changes"; else
-            git commit -m "auto: rebuild index.html from data change"; git push; fi
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
