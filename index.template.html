@@ -215,7 +215,9 @@
   const TELEM="https://paramat-telemetry.nick-1d7.workers.dev";
   const TKEY="paramat_telemetry_v1";
   const telemOn=()=>{try{return localStorage.getItem(TKEY)==="1"}catch(e){return false}};
-  function telem(e,m){if(!telemOn()||!m||!m.brand)return;
+  // force=true for EXPLICIT user actions (flagging a result) — still anonymous,
+  // but not gated on the passive-telemetry opt-in.
+  function telem(e,m,force){if((!telemOn()&&!force)||!m||!m.brand)return;
     try{navigator.sendBeacon(TELEM+"/e",JSON.stringify({e,m:(m.brand||"")+"|"+(m.product||""),f:m.family||"",g:goal||""}))}catch(_){}}
   const topt=document.getElementById("telemopt");
   topt.checked=telemOn();
@@ -595,7 +597,10 @@
         <pre id="preview">${esc(optYaml(m))}</pre>
       </div>
       <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?`Independent sources agree ${m.niqr!=null?`within <b>${m.niqr} °C</b> on nozzle${m.biqr!=null?` / <b>${m.biqr} °C</b> on bed`:""}`:"exactly"} — use the spread as uncertainty.`:"Only one source has this material — treat as a starting point and verify a small print."}
-        <br><a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">✎ Spot an error? Suggest a correction</a></div>
+        <br><span style="display:inline-flex;gap:12px;flex-wrap:wrap;margin-top:4px">
+        <a href="#" id="flagbtn">🚩 Looks wrong? Flag it</a>
+        <a href="mailto:paramat@sunn3d.com?subject=${encodeURIComponent("ParaMat feedback: "+m.brand+" "+m.product)}&body=${encodeURIComponent("Material: "+m.brand+" "+m.product+" ("+(m.family||"?")+")\nShown: nozzle "+(m.noz??"—")+" °C ("+(m.nmin??"?")+"–"+(m.nmax??"?")+"), bed "+(m.bed??"—")+" °C\n\nWhat looks wrong, and your source (spool label / manufacturer page):\n\n")}">✉ Email feedback</a>
+        <a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">✎ Suggest a correction</a></span></div>
     </div>`;
     card.querySelectorAll(".goal button").forEach(b=>b.onclick=()=>{goal=b.dataset.g;render()});
     document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record");telem("export_opt",m)};
@@ -603,6 +608,8 @@
     document.getElementById("nfc").onclick=()=>writeNFC(m);
     document.getElementById("dorca").onclick=()=>{dl(slug+".orca.json",JSON.stringify(orcaProfile(m,temp),null,2),"application/json");toast("Slicer profile downloaded — import in Orca/Bambu");telem("export_orca",m)};
     document.getElementById("saveshelf").onclick=()=>shelfAdd({name:m.brand+" "+m.product,family:m.family,brand:m.brand,noz:(m.nmin!=null&&m.nmax!=null)?[m.nmin,m.nmax]:temp,bed:m.bed,flow:m.flow,mvs:m.mvs,retr:m.retr,fan_lo:m.fan_lo,fan_hi:m.fan_hi,pa:m.pa,source:"db"});
+    document.getElementById("flagbtn").onclick=e=>{e.preventDefault();telem("flag",m,true);
+      toast("Flagged — thanks. Repeatedly-flagged materials get investigated.")};
   }
   async function writeNFC(m){
     if(!("NDEFReader"in window)){toast("Tap-to-write needs Chrome on Android (WebNFC). Use the download instead.");return}
