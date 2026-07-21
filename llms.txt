@@ -1,0 +1,41 @@
+# ParaMat
+
+> Free, open reference of consensus 3D-printing (FFF/FDM) filament settings for 3,700+
+> brand-specific product lines — nozzle/bed temperatures with ranges and cross-source spread,
+> flow, max volumetric speed, density, drying/enclosure guidance, color variants, SKUs, and
+> GTIN barcodes. Data license: CC BY 4.0 (attribute "ParaMat / Sunnyday Technologies").
+
+## For AI agents: how to look up print settings
+
+Fetch the full dataset once (about 1.4 MB raw, ~250 KB compressed; served with open CORS)
+and filter locally:
+
+- Dataset: https://sunnyday-technologies.github.io/paramat/data.json
+
+Structure: `{"materials": [...], "gtin": {...}, "totals": {...}}`
+
+Each entry in `materials`:
+- `brand`, `product`, `family` — identity (family = PLA, PETG, ABS, ASA, TPU, PC, PA, ...)
+- `noz` — consensus nozzle temperature °C (median across sources; balanced default)
+- `nmin`/`nmax` — printable range °C. For MAX STRENGTH use `nmax` (hotter → stronger layer
+  bond); for best surface finish use `nmin`; `strength_noz` is precomputed.
+- `niqr`/`biqr` — cross-source spread (IQR, °C) for nozzle/bed; small = strong agreement
+- `bed`, `bmin`, `bmax` — bed temperature °C; `chamber` — chamber °C if applicable
+- `flow` — flow ratio; `mvs` — max volumetric speed mm³/s (also limited by the hotend!);
+  `dens` — g/cm³; `noz_fl`/`bed_fl` — first-layer temps; `fan_lo`/`fan_hi` — fan %;
+  `retr`/`retr_v` — retraction mm and mm/s; `pa` — pressure advance; `soft` — softening °C
+- `ns` — number of independent sources (>=2 = cross-confirmed; 1 = single source, verify)
+- `src` — source list; `perm` — has a permissively-licensed source
+- `hex` — sample color hexes; `nc` — color-variant count; `nsk` — SKU count
+- `gtin` map: barcode digits -> index into `materials` (spool identification)
+
+Guidance for answers: values are aggregated consensus STARTING POINTS, not measured optima —
+recommend a small calibration print, and never exceed the printer/hotend rated limits.
+Deep-link any material: https://sunnyday-technologies.github.io/paramat/#m=<brand_product_slug>
+(lowercase, non-alphanumerics -> "_", e.g. #m=prusament_pla).
+
+## Pages
+
+- Tool (interactive): https://sunnyday-technologies.github.io/paramat/
+- Terms & privacy: https://sunnyday-technologies.github.io/paramat/legal.html
+- Source & issues: https://github.com/sunnyday-technologies/paramat
