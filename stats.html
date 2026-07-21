@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ParaMat — community usage stats</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Public, anonymous aggregate of which filaments the ParaMat community looks up, exports, and flags. No personal data — this is everything we collect.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
+<style>
+  :root{color-scheme:light;
+    --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
+    --line:#e7e2d9;--hair:rgba(26,23,20,.08);--accent:#d8531f;--cool:#2a6fb0;--good:#2f7d32}
+  @media(prefers-color-scheme:dark){:root{
+    --page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
+    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--cool:#5fa1dc;--good:#57b45c;color-scheme:dark}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 16px 60px}
+  .wrap{max-width:720px;margin:0 auto}
+  header{padding:28px 0 10px}
+  .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  h1{font-size:clamp(22px,5vw,28px);letter-spacing:-.02em;margin:8px 0 6px;font-weight:800}
+  h2{font-size:18px;margin:26px 0 10px}
+  p{color:var(--ink2);margin:0 0 10px}
+  a{color:var(--cool)}
+  .rc{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:14px}
+  table{width:100%;border-collapse:collapse;font-size:15px}
+  th{font:11px ui-monospace,Consolas,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  td{padding:10px 14px;border-bottom:1px solid var(--hair);color:var(--ink2)}
+  td b{color:var(--ink)}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+  .bar{height:5px;background:var(--accent);border-radius:3px;margin-top:5px;opacity:.75}
+  .empty{padding:18px 16px;color:var(--ink3)}
+  .pick{display:flex;gap:8px;align-items:center;margin:6px 0 0}
+  select,button{font:15px inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+  .note{font-size:13.5px;color:var(--ink3);margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ParaMat · public aggregate</div>
+    <h1>Community usage stats</h1>
+    <p>Everything ParaMat collects, shown in full: anonymous per-month counters of which materials
+      get opened, exported, or flagged. No IPs, no accounts, no individual events —
+      <a href="legal.html">how this works</a>. <a href="./">← Back to the tool</a></p>
+    <div class="pick"><label for="mo" class="eyebrow" style="font-size:10px">Month</label>
+      <select id="mo"></select><button id="go">Load</button></div>
+  </header>
+  <div id="out"><div class="rc"><div class="empty">Loading…</div></div></div>
+  <p class="note">Usage counts come only from visitors who opt in; flags come from anyone tapping
+    "🚩 Looks wrong". Counts are approximate (best-effort, cached up to an hour). Raw JSON:
+    <a id="raw" href="#">/top</a> · License CC BY 4.0.</p>
+</div>
+<script>
+(function(){
+  const API="https://paramat-telemetry.nick-1d7.workers.dev";
+  const out=document.getElementById("out"),mo=document.getElementById("mo");
+  const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const now=new Date();
+  for(let i=0;i<12;i++){const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));
+    const v=d.toISOString().slice(0,7);const o=document.createElement("option");o.value=v;o.textContent=v;mo.appendChild(o);}
+  const LABELS={pick:"Opened",export_orca:"Slicer export",export_opt:"OpenPrintTag",export_os:"OpenSpool",nfc_write:"NFC write",scan_match:"Barcode match",flag:"🚩 Flagged"};
+  function table(title,rows,max){
+    if(!rows.length)return "";
+    return `<div class="rc"><table><thead><tr><th colspan="2">${esc(title)}</th><th style="text-align:right">count</th></tr></thead><tbody>`+
+      rows.map(r=>`<tr><td style="width:58%"><b>${esc(r.m.replace("|"," "))}</b>${r.f?` <span style="color:var(--ink3)">· ${esc(r.f)}</span>`:""}<div class="bar" style="width:${Math.max(4,Math.round(100*r.n/max))}%"></div></td><td style="color:var(--ink3)">${esc(LABELS[r.e]||r.e)}${r.g?` · ${esc(r.g)}`:""}</td><td class="n">${r.n.toLocaleString()}</td></tr>`).join("")+
+      `</tbody></table></div>`;
+  }
+  async function load(){
+    const month=mo.value;
+    document.getElementById("raw").href=API+"/top?month="+month;
+    out.innerHTML='<div class="rc"><div class="empty">Loading…</div></div>';
+    try{
+      const r=await fetch(API+"/top?month="+month);
+      const d=await r.json();
+      const rows=(d.rows||[]).filter(x=>x.n>0);
+      if(!rows.length){out.innerHTML='<div class="rc"><div class="empty">No data for '+esc(month)+' yet. Counts appear once visitors opt in to sharing (or flag a result).</div></div>';return;}
+      const flags=rows.filter(x=>x.e==="flag"),use=rows.filter(x=>x.e!=="flag");
+      const max=Math.max(...rows.map(x=>x.n));
+      out.innerHTML=(flags.length?`<h2>🚩 Flagged for review</h2>`+table("Materials the community flagged as wrong",flags,max):"")+
+        (use.length?`<h2>Most-used materials</h2>`+table("Opens & exports (opt-in visitors)",use,max):"")+
+        (d.truncated?'<p class="note">List truncated — see raw JSON for more.</p>':"");
+    }catch(e){out.innerHTML='<div class="rc"><div class="empty">Could not load stats — try again shortly.</div></div>';}
+  }
+  document.getElementById("go").onclick=load;mo.onchange=load;
+  load();
+})();
+</script>
+</body>
+</html>

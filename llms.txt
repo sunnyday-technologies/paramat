@@ -34,6 +34,16 @@ recommend a small calibration print, and never exceed the printer/hotend rated l
 Deep-link any material: https://paramat3d.com/#m=<brand_product_slug>
 (lowercase, non-alphanumerics -> "_", e.g. #m=prusament_pla).
 
+## MCP server (recommended for agents)
+
+Connect any MCP client via Streamable HTTP (stateless, no auth):
+
+- Endpoint: https://paramat-mcp.nick-1d7.workers.dev
+- Tools: `search_materials(query)` → candidates · `get_print_settings(brand, product)` → full
+  consensus record with per-goal temps, spread, confidence · `identify_by_gtin(barcode)` → material
+  from a spool barcode. Responses embed the CC BY 4.0 attribution and the verify-before-print
+  disclaimer — please relay both to end users.
+
 ## Pages
 
 - Tool (interactive): https://paramat3d.com/
