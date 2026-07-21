@@ -599,8 +599,8 @@
       <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?`Independent sources agree ${m.niqr!=null?`within <b>${m.niqr} °C</b> on nozzle${m.biqr!=null?` / <b>${m.biqr} °C</b> on bed`:""}`:"exactly"} — use the spread as uncertainty.`:"Only one source has this material — treat as a starting point and verify a small print."}
         <br><span style="display:inline-flex;gap:12px;flex-wrap:wrap;margin-top:4px">
         <a href="#" id="flagbtn">🚩 Looks wrong? Flag it</a>
-        <a href="mailto:paramat@sunn3d.com?subject=${encodeURIComponent("ParaMat feedback: "+m.brand+" "+m.product)}&body=${encodeURIComponent("Material: "+m.brand+" "+m.product+" ("+(m.family||"?")+")\nShown: nozzle "+(m.noz??"—")+" °C ("+(m.nmin??"?")+"–"+(m.nmax??"?")+"), bed "+(m.bed??"—")+" °C\n\nWhat looks wrong, and your source (spool label / manufacturer page):\n\n")}">✉ Email feedback</a>
-        <a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">✎ Suggest a correction</a></span></div>
+        <a href="https://github.com/sunnyday-technologies/paramat/edit/main/curated.csv" target="_blank" rel="noopener">✎ Fix it (PR — add a corrected row)</a>
+        <a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">🗨 Open an issue</a></span></div>
     </div>`;
     card.querySelectorAll(".goal button").forEach(b=>b.onclick=()=>{goal=b.dataset.g;render()});
     document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record");telem("export_opt",m)};
