@@ -54,6 +54,9 @@
   .chip{font:11px ui-monospace,Consolas,monospace;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:5px;align-items:center}
   .chip.ok{color:var(--good);background:var(--good-soft);border-color:transparent}
   .chip.warn{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+  .sw{display:flex;gap:5px;align-items:center;margin-top:10px;flex-wrap:wrap}
+  .sw i{width:15px;height:15px;border-radius:5px;border:1px solid var(--hair);display:inline-block;flex-shrink:0}
+  .sw .swn{font:11px ui-monospace,Consolas,monospace;color:var(--ink3);margin-left:3px}
   .goal{display:flex;gap:6px;padding:15px 20px 0}
   .goal button{flex:1;min-width:0;padding:9px 4px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
   .goal button.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -146,7 +149,9 @@
     return null;
   }
   function flameChip(text){const f=flameLabel(text);return f?`<span class="chip">🔥 ${esc(f)} · as stated</span>`:"";}
-  document.getElementById("count").textContent=DATA.length.toLocaleString()+" materials";
+  const TOT=RAW.totals||{};
+  document.getElementById("count").textContent=DATA.length.toLocaleString()+" products"
+    +(TOT.colors?" · "+TOT.colors.toLocaleString()+" colors · "+TOT.skus.toLocaleString()+" SKUs":"");
   document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString()+" SKUs";
 
   const byFam={};DATA.forEach(m=>{if(m.noz!=null)(byFam[m.family]=byFam[m.family]||[]).push(m.noz)});
@@ -432,10 +437,12 @@
     px("Fan min",m.fan_lo!=null?m.fan_lo+"%":null,"");px("Fan max",m.fan_hi!=null?m.fan_hi+"%":null,"");
     px("Retraction",m.retr,"mm");px("Retract spd",m.retr_v,"mm/s");px("Pressure adv.",m.pa,"");px("Softening",m.soft,"°C");
     const extraHtml=ex.length?`<details class="more"><summary>Full profile — ${ex.length} more parameter${ex.length>1?"s":""}</summary><div class="tiles">${ex.join("")}</div></details>`:"";
+    // colour swatches from the OFD variant layer (hexes validated at build time)
+    const sw=m.nc?`<div class="sw">${(m.hex||[]).map(h=>`<i style="background:${h.includes(",")?`linear-gradient(90deg,${h})`:h}" title="${h}"></i>`).join("")}<span class="swn">${m.nc} color${m.nc>1?"s":""}${m.nsk?` · ${m.nsk} SKU${m.nsk>1?"s":""}`:""}${m.nc>(m.hex||[]).length&&(m.hex||[]).length?" · sample shown":""}</span></div>`:"";
     card.className="on";
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name"><span class="brand">${esc(m.brand)}</span> ${esc(m.product)}</div>
-        <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}${metaChips(m.family)}${flameChip(m.product)}</div></div>
+        <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}${metaChips(m.family)}${flameChip(m.product)}</div>${sw}</div>
       <div class="goal">${["balanced","strength","finish","fast"].map(g=>`<button data-g="${g}" class="${g===goal?"on":""}">${g[0].toUpperCase()+g.slice(1)}${g==="balanced"?" ★":""}</button>`).join("")}</div>
       <div class="goal-note">${note}</div>
       <div class="hero"><div class="big tnum">${temp??"—"}<span class="u"> °C</span></div>
