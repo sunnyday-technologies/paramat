@@ -1,0 +1,213 @@
+<title>ParaMat — Print Conditions & RFID</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{color-scheme:light;
+    --page:#f7f5f2;--card:#fffefc;--ink:#1a1714;--ink2:#5c574f;--ink3:#928b80;
+    --line:#e7e2d9;--hair:rgba(26,23,20,.08);--accent:#d8531f;--accent-soft:rgba(216,83,31,.10);
+    --cool:#2a6fb0;--cool-soft:rgba(42,111,176,.10);--good:#2f7d32;--good-soft:rgba(47,125,50,.10)}
+  @media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){
+    --page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
+    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--accent-soft:rgba(240,112,60,.16);
+    --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}}
+  :root[data-theme="dark"]{--page:#131110;--card:#1e1b19;--ink:#f4f0ea;--ink2:#c4bcb0;--ink3:#8c857a;
+    --line:#302b26;--hair:rgba(255,255,255,.09);--accent:#f0703c;--accent-soft:rgba(240,112,60,.16);
+    --cool:#5fa1dc;--cool-soft:rgba(95,161,220,.14);--good:#57b45c;--good-soft:rgba(87,180,92,.15);color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:0 18px 80px}
+  .wrap{max-width:760px;margin:0 auto}.tnum{font-variant-numeric:tabular-nums}
+  header{padding:40px 0 6px}
+  .eyebrow{font-family:ui-monospace,Consolas,monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3);display:flex;gap:9px;align-items:center}
+  .eyebrow .d{width:8px;height:8px;border-radius:2px;background:var(--accent)}
+  h1{font-size:clamp(25px,5vw,34px);line-height:1.08;letter-spacing:-.02em;margin:12px 0 6px;font-weight:800}
+  .sub{color:var(--ink2);max-width:58ch;margin:0 0 20px}
+  .row{display:flex;gap:8px}
+  #q{flex:1;font-size:17px;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);outline:none}
+  #q:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:0 15px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:2}
+  .search{position:relative;margin-bottom:8px}
+  #drop{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.16);max-height:320px;overflow:auto;display:none}
+  #drop.on{display:block}
+  .opt{padding:10px 14px;cursor:pointer;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--hair)}
+  .opt:hover,.opt.hl{background:var(--accent-soft)}.opt b{font-weight:600}
+  .opt .fam{margin-left:auto;font:11px ui-monospace,Consolas,monospace;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
+  .hint{color:var(--ink3);font-size:13px;margin:2px 2px 0}
+  #scanbox{margin-top:10px;display:none}#scanbox.on{display:block}
+  #reader{width:100%;max-width:360px;margin:0 auto;border-radius:12px;overflow:hidden}
+  #card{margin-top:22px;display:none}#card.on{display:block}
+  .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .rc-head{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+  .rc-head .name{font-size:21px;font-weight:800;letter-spacing:-.01em}.rc-head .name .brand{color:var(--accent)}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
+  .chip{font:11px ui-monospace,Consolas,monospace;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);display:inline-flex;gap:5px;align-items:center}
+  .chip.ok{color:var(--good);background:var(--good-soft);border-color:transparent}
+  .chip.warn{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+  .goal{display:flex;gap:6px;padding:15px 20px 0}
+  .goal button{flex:1;padding:9px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--ink2);font-size:13px;font-weight:600;cursor:pointer}
+  .goal button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .goal-note{padding:9px 20px 0;color:var(--ink2);font-size:13px;min-height:16px}
+  .hero{padding:12px 20px 2px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .hero .big{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .hero .big .u{font-size:19px;color:var(--ink3);font-weight:600}.hero .rng{color:var(--ink2);font-size:14px}.hero .rng b{color:var(--ink)}
+  .delta{color:var(--accent);font-weight:600}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:1px;background:var(--hair);margin-top:16px;border-top:1px solid var(--line)}
+  .tile{background:var(--card);padding:13px 16px}
+  .tile .k{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+  .tile .v{font-size:19px;font-weight:700;margin-top:3px}.tile .v .u{font-size:12px;color:var(--ink3);font-weight:600}
+  .export{border-top:1px solid var(--line);padding:16px 20px 18px;background:var(--cool-soft)}
+  .export h3{margin:0 0 3px;font-size:14px;display:flex;align-items:center;gap:7px}
+  .export .note{color:var(--ink2);font-size:12.5px;margin:0 0 12px}
+  .exbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .exbtns .btn{background:var(--card)}
+  .exbtns .btn.pri{background:var(--cool);border-color:var(--cool);color:#fff}
+  pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px;overflow:auto;font:12px ui-monospace,Consolas,monospace;color:var(--ink2);margin:12px 0 0}
+  .prov{padding:13px 20px 16px;color:var(--ink2);font-size:13px;border-top:1px solid var(--line)}.prov b{color:var(--ink)}
+  footer{margin-top:36px;color:var(--ink3);font-size:12.5px;border-top:1px solid var(--line);padding-top:14px}
+  a{color:var(--cool)}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--page);padding:9px 16px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none}
+  #toast.on{opacity:1}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow"><span class="d"></span> ParaMat · open reference · scan → conditions → RFID</div>
+    <h1>Ideal print conditions for <em>your exact</em> filament — ready to write to a tag.</h1>
+    <p class="sub">Search or scan a filament, get the brand-precise consensus conditions, then export them in <b>OpenPrintTag</b> or <b>OpenSpool</b> format to write onto a reusable NFC tag for your spool. Fully open, static, no server.</p>
+  </header>
+
+  <div class="search">
+    <div class="row">
+      <input id="q" autocomplete="off" spellcheck="false" placeholder="Search brand + material — e.g. Prusament PLA, Bambu ABS">
+      <button class="btn" id="scanbtn" title="Scan barcode"><svg viewBox="0 0 24 24"><path d="M3 5v14M8 5v14M12 5v14M17 5v14M21 5v14"/></svg> Scan</button>
+    </div>
+    <div id="drop"></div>
+  </div>
+  <div class="hint"><span id="count"></span> · <span id="gcount"></span> with barcodes · type or tap Scan.</div>
+  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
+
+  <div id="card"></div>
+
+  <footer>
+    Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). RFID export: OpenPrintTag (MIT) and OpenSpool JSON. Not measured optima; single-source materials are flagged.
+  </footer>
+</div>
+<div id="toast"></div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script id="d" type="application/json">__DATA__</script>
+<script>
+(function(){
+  const RAW=JSON.parse(document.getElementById("d").textContent);
+  const DATA=RAW.materials, GTIN=RAW.gtin||{};
+  const FAM2OPT={PLA:"PLA",PETG:"PETG",TPU:"TPU",ABS:"ABS",ASA:"ASA",PC:"PC",PCTG:"PCTG",PP:"PP",TPE:"TPE",HIPS:"HIPS"};
+  document.getElementById("count").textContent=DATA.length.toLocaleString()+" materials";
+  document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString()+" SKUs";
+
+  const byFam={};DATA.forEach(m=>{if(m.noz!=null)(byFam[m.family]=byFam[m.family]||[]).push(m.noz)});
+  const famMed={};for(const f in byFam){const a=byFam[f].sort((x,y)=>x-y);famMed[f]=a[a.length>>1]}
+  DATA.forEach((m,i)=>{m._k=((m.brand||"")+" "+(m.product||"")+" "+(m.family||"")).toLowerCase();m._i=i});
+
+  const q=document.getElementById("q"),drop=document.getElementById("drop"),card=document.getElementById("card");
+  const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const toast=t=>{const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800)};
+  let shown=[],hl=-1;
+  function search(t){t=t.trim().toLowerCase();if(!t){drop.classList.remove("on");return}
+    const tk=t.split(/\s+/),r=[];for(const m of DATA){if(tk.every(k=>m._k.includes(k))){r.push(m);if(r.length>=40)break}}
+    shown=r;hl=-1;drop.innerHTML=r.length?r.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`;drop.classList.add("on")}
+  q.addEventListener("input",()=>search(q.value));
+  q.addEventListener("keydown",e=>{if(!shown.length)return;
+    if(e.key==="ArrowDown"){hl=Math.min(hl+1,shown.length-1);paint();e.preventDefault()}
+    else if(e.key==="ArrowUp"){hl=Math.max(hl-1,0);paint();e.preventDefault()}
+    else if(e.key==="Enter"&&hl>=0)pick(shown[hl]);else if(e.key==="Escape")drop.classList.remove("on")});
+  function paint(){[...drop.children].forEach((c,j)=>c.classList.toggle("hl",j===hl));if(hl>=0)drop.children[hl].scrollIntoView({block:"nearest"})}
+  drop.addEventListener("click",e=>{const o=e.target.closest(".opt");if(o&&o.dataset.j)pick(shown[+o.dataset.j])});
+  document.addEventListener("click",e=>{if(!e.target.closest(".search"))drop.classList.remove("on")});
+
+  // ---- barcode scan (html5-qrcode — cross-platform incl. iOS Safari) ----
+  const scanbox=document.getElementById("scanbox"),scanmsg=document.getElementById("scanmsg");
+  let h5q=null,scanning=false;
+  document.getElementById("scanbtn").onclick=async()=>{
+    if(scanning){await stopScan();return}
+    if(!window.Html5Qrcode){toast("Scanner still loading — try again in a second.");return}
+    const F=Html5QrcodeSupportedFormats;
+    h5q=new Html5Qrcode("reader",{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.QR_CODE,F.CODE_128],verbose:false});
+    scanbox.classList.add("on");scanning=true;scanmsg.textContent="Point the camera at the spool barcode…";
+    try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:160}},
+      t=>onCode(String(t).replace(/\D/g,"")),()=>{});}
+    catch(e){toast("Allow camera access to scan.");await stopScan();}
+  };
+  async function stopScan(){scanning=false;if(h5q){try{await h5q.stop();h5q.clear();}catch(e){}h5q=null}scanbox.classList.remove("on");}
+  function onCode(code){
+    if(!code)return;
+    for(const c of [code,code.replace(/^0+/,""),"0"+code,"00"+code]){
+      if(GTIN[c]!=null){stopScan();toast("Matched "+c);pick(DATA[GTIN[c]]);return}}
+    scanmsg.textContent="Scanned "+code+" — not in our database yet. Search by name instead.";
+  }
+
+  // ---- result + export ----
+  let cur=null,goal="balanced";
+  function pick(m){cur=m;goal="balanced";q.value=m.brand+" "+m.product;drop.classList.remove("on");render();card.scrollIntoView({behavior:"smooth",block:"nearest"})}
+
+  function optRecord(m){
+    const r={material_class:"FFF"};
+    if(FAM2OPT[m.family])r.material_type=FAM2OPT[m.family];
+    r.brand_name=m.brand;r.material_name=m.product;r.material_abbreviation=m.family;
+    if(m.dens!=null)r.density=m.dens;r.filament_diameter=1.75;
+    if(m.nmin!=null)r.min_print_temperature=m.nmin;if(m.nmax!=null)r.max_print_temperature=m.nmax;
+    if(m.bmin!=null)r.min_bed_temperature=m.bmin;if(m.bmax!=null)r.max_bed_temperature=m.bmax;
+    if(m.chamber!=null)r.chamber_temperature=m.chamber;
+    return r;
+  }
+  function optYaml(m){const r=optRecord(m);
+    return "# OpenPrintTag data record — write to an NTAG21x with the OpenPrintTag encoder\n# specs.openprinttag.org · generated by ParaMat\n"+Object.entries(r).map(([k,v])=>`${k}: ${v}`).join("\n")+"\n";}
+  function openSpool(m){const o={protocol:"openspool",version:"1.0",type:(FAM2OPT[m.family]||m.family||"PLA"),brand:m.brand,min_temp:String(m.nmin??m.noz??""),max_temp:String(m.nmax??m.noz??"")};if(m.dens!=null)o.density=m.dens;return o;}
+  function dl(name,text,mime){const b=new Blob([text],{type:mime});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=name;a.click();URL.revokeObjectURL(u)}
+
+  function render(){const m=cur;if(!m)return;
+    let temp,note;
+    if(goal==="strength"){temp=m.strength_noz??m.noz;note="Higher nozzle temp → stronger interlayer bond (~+20 °C headroom before quality fails)."}
+    else if(goal==="finish"){temp=m.nmin??m.noz;note="Lower nozzle temp → cleaner surface, less stringing, some strength cost."}
+    else{temp=m.noz;note="Cross-source consensus — a balanced starting point."}
+    const hasR=m.nmin!=null&&m.nmax!=null&&m.nmax>m.nmin,gm=famMed[m.family],dl_=(m.noz!=null&&gm!=null)?m.noz-gm:null;
+    const conf=m.ns>=2?`<span class="chip ok">✓ ${m.ns} sources</span>`:`<span class="chip warn">! single source</span>`;
+    const slug=(m.brand+"_"+m.product).replace(/[^\w]+/g,"_").toLowerCase();
+    card.className="on";
+    card.innerHTML=`<div class="rc">
+      <div class="rc-head"><div class="name"><span class="brand">${esc(m.brand)}</span> ${esc(m.product)}</div>
+        <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}</div></div>
+      <div class="goal">${["balanced","strength","finish"].map(g=>`<button data-g="${g}" class="${g===goal?"on":""}">${g[0].toUpperCase()+g.slice(1)}${g==="balanced"?" ★":""}</button>`).join("")}</div>
+      <div class="goal-note">${note}</div>
+      <div class="hero"><div class="big tnum">${temp??"—"}<span class="u"> °C</span></div>
+        <div class="rng">nozzle${hasR?` · range <b>${m.nmin}–${m.nmax} °C</b>`:``}${dl_!=null&&Math.abs(dl_)>=3?`<br><span class="delta">${dl_>0?"+":""}${dl_} °C vs generic ${esc(m.family)}</span>`:``}</div></div>
+      <div class="tiles">
+        <div class="tile"><div class="k">Bed</div><div class="v tnum">${m.bed??"—"}<span class="u"> °C</span></div></div>
+        <div class="tile"><div class="k">Flow</div><div class="v tnum">${m.flow??"—"}</div></div>
+        <div class="tile"><div class="k">Max vol.</div><div class="v tnum">${m.mvs??"—"}<span class="u"> mm³/s</span></div></div>
+        <div class="tile"><div class="k">Density</div><div class="v tnum">${m.dens??"—"}<span class="u"> g/cm³</span></div></div>
+        ${m.chamber!=null?`<div class="tile"><div class="k">Chamber</div><div class="v tnum">${m.chamber}<span class="u"> °C</span></div></div>`:""}</div>
+      <div class="export">
+        <h3>🏷️ Assign to a reusable RFID tag</h3>
+        <div class="note">Write these conditions to an NFC tag on your spool. OpenPrintTag = the open standard (Prusa, MIT); OpenSpool JSON writes directly and drives a Bambu AMS via the OpenSpool bridge.</div>
+        <div class="exbtns">
+          <button class="btn pri" id="nfc">Write to NFC tag</button>
+          <button class="btn" id="dopt">Download OpenPrintTag (.yaml)</button>
+          <button class="btn" id="dos">Copy OpenSpool JSON</button>
+        </div>
+        <pre id="preview">${esc(optYaml(m))}</pre>
+      </div>
+      <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?"Independent sources agree within the range — use the spread as uncertainty.":"Only one source has this material — treat as a starting point and verify a small print."}</div>
+    </div>`;
+    card.querySelectorAll(".goal button").forEach(b=>b.onclick=()=>{goal=b.dataset.g;render()});
+    document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record")};
+    document.getElementById("dos").onclick=()=>{navigator.clipboard.writeText(JSON.stringify(openSpool(m))).then(()=>toast("OpenSpool JSON copied"))};
+    document.getElementById("nfc").onclick=()=>writeNFC(m);
+  }
+  async function writeNFC(m){
+    if(!("NDEFReader"in window)){toast("Tap-to-write needs Chrome on Android (WebNFC). Use the download instead.");return}
+    try{const w=new NDEFReader();
+      await w.write({records:[{recordType:"mime",mediaType:"application/json",data:new TextEncoder().encode(JSON.stringify(openSpool(m)))}]});
+      toast("Written! Tap your spool tag.");}
+    catch(e){toast("NFC write failed: "+e.message)}
+  }
+})();
+</script>
