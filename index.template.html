@@ -85,9 +85,17 @@
   .opt:hover,.opt.hl{background:var(--accent-soft)}.opt b{font-weight:600}
   .opt .fam{margin-left:auto;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--ink3);border:1px solid var(--line);border-radius:999px;padding:2px 8px}
   .hint{color:var(--ink3);font-size:13.5px;margin:2px 2px 0}
-  #scanbox,#ocrbox{margin-top:10px;display:none}#scanbox.on,#ocrbox.on{display:block}
+  #scanbox,#ocrbox{margin-top:10px;display:none;position:relative}#scanbox.on,#ocrbox.on{display:block}
   #reader,#ocrcam{width:100%;display:block;border-radius:12px;overflow:hidden}
   #ocrcam{background:#000}
+  #reader video{pointer-events:none}   /* stray taps on the preview do nothing */
+  .scanlive{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:5;
+    display:flex;gap:8px;align-items:center;background:rgba(2,18,36,.78);color:#fff;
+    font-size:13px;font-weight:600;padding:7px 14px;border-radius:999px;pointer-events:none;
+    backdrop-filter:blur(4px);white-space:nowrap}
+  .scanlive .pulse{width:9px;height:9px;border-radius:50%;background:#97d700;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
+  @media(prefers-reduced-motion:reduce){.scanlive .pulse{animation:none}}
   #card{margin-top:22px;display:none}#card.on{display:block}
   details.more{border-top:1px solid var(--line)}
   details.more>summary{padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--cool);list-style:none}
@@ -186,7 +194,7 @@
   </div>
   <!-- camera boxes sit ABOVE the buttons: when a camera is open, its
        controls (capture / stop) are directly below the view, not above it -->
-  <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode…</div></div>
+  <div id="scanbox"><div class="scanlive"><span class="pulse"></span>Scanning — no button needed</div><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode…</div></div>
   <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1">📸 Capture &amp; read label</button></div><div class="hint" id="ocrmsg" role="status"></div></div>
   <div class="actions">
     <button class="btn" id="scanbtn">📷 Scan barcode</button>
@@ -354,7 +362,8 @@
     document.getElementById("scanbtn").textContent="✕ Stop scanning";
     // scan region = (nearly) the whole camera view — a small centered box wastes the frame
     try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:(w,h)=>({width:Math.floor(w*.94),height:Math.floor(h*.94)})},
-      t=>onScan(String(t)),()=>{});}
+      t=>onScan(String(t)),()=>{});
+      scanbox.scrollIntoView({behavior:"smooth",block:"center"});}
     catch(e){toast("Allow camera access to scan.");await stopScan();}
   };
   async function stopScan(){scanning=false;if(h5q){try{await h5q.stop();h5q.clear();}catch(e){}h5q=null}scanbox.classList.remove("on");document.getElementById("scanbtn").textContent="📷 Scan barcode";}
@@ -388,6 +397,7 @@
     catch(e){toast("Allow camera access.");return}
     ocrcam.srcObject=ocrStream;await ocrcam.play();ocrbox.classList.add("on");
     document.getElementById("ocrbtn").textContent="✕ Close camera";
+    ocrbox.scrollIntoView({behavior:"smooth",block:"center"});
     ocrmsg.textContent="Fill the frame with the brand/material text, then Capture.";
     loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
   };
