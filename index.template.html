@@ -98,6 +98,7 @@
 
   <footer>
     Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). RFID export: OpenPrintTag (MIT) and OpenSpool JSON. Not measured optima; single-source materials are flagged.
+    <br><br><b>Max volumetric flow is also a hotend limit.</b> Verify with a quick extrude-in-air test at rising rates: the strand should coil out <i>soft</i> (fully melted); if it comes out <i>stiff/straight</i> you're past the melt capacity — slow down, run hotter, or fit a high-flow hotend. Method: <a href="https://ellis3dp.com/Print-Tuning-Guide/articles/determining_max_volumetric_flow_rate.html" target="_blank" rel="noopener">Ellis' Print Tuning Guide</a>.
   </footer>
 </div>
 <div id="toast"></div>
@@ -296,7 +297,7 @@
     let temp,note;
     if(goal==="strength"){temp=m.strength_noz??m.noz;note="Higher nozzle temp → stronger interlayer bond (~+20 °C headroom before quality fails)."}
     else if(goal==="finish"){temp=m.nmin??m.noz;note="Lower nozzle temp → cleaner surface, less stringing, some strength cost."}
-    else if(goal==="fast"){temp=m.strength_noz??m.noz;note=`Run to the material's max volumetric flow${vspd?` (≈ ${vspd} mm/s at 0.2×0.4 mm)`:""} and the hot end of the range so the melt keeps up.`}
+    else if(goal==="fast"){temp=m.strength_noz??m.noz;note=`Run to the material's max volumetric flow${vspd?` (≈ ${vspd} mm/s at 0.2×0.4 mm)`:""} and the hot end of the range so the melt keeps up — but confirm your hotend can hit it (see the flow-test note below).`}
     else{temp=m.noz;note="Cross-source consensus — a balanced starting point."}
     const hasR=m.nmin!=null&&m.nmax!=null&&m.nmax>m.nmin,gm=famMed[m.family],dl_=(m.noz!=null&&gm!=null)?m.noz-gm:null;
     const conf=m.ns>=2?`<span class="chip ok">✓ ${m.ns} sources</span>`:`<span class="chip warn">! single source</span>`;
