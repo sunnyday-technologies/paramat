@@ -171,9 +171,9 @@
       const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
       cv.getContext("2d").drawImage(ocrcam,0,0);
       const {data:{text}}=await Tesseract.recognize(cv,"eng");
-      const cands=fuzzyMatch(text,8);stopOcr();
-      if(cands.length){toast("Read: "+text.trim().split(/\s+/).slice(0,4).join(" "));showCandidates(cands);q.scrollIntoView({block:"nearest"});}
-      else showCandidates([],"Couldn't match \""+text.trim().slice(0,40).replace(/\n/g," ")+"\" — try search.");
+      const parsed=parseLabel(text),cands=fuzzyMatch(text,8);stopOcr();
+      if(parsed.noz||parsed.bed||cands.length){toast("Read label");renderLabelResult(parsed,cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else showCandidates([],"Couldn't read \""+text.trim().slice(0,36).replace(/\n/g," ")+"\" — try again with better light, or search.");
     }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
   };
   function fuzzyMatch(text,limit){
@@ -188,6 +188,37 @@
       ? list.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join("")
       : `<div class="opt" style="color:var(--ink3)">${esc(msg||"No match")}</div>`;
     drop.classList.add("on");
+  }
+  // Extract the conditions the label itself prints (works for unbranded/exotic spools)
+  function parseLabel(text){
+    const t=String(text).replace(/\s+/g," ");
+    const fam=(t.match(/\b(PLA\+?|PETG|PET-?G|ABS|ASA|TPU|TPE|PVA|PVB|PPS(?:-?GF\d*|-?CF)?|PC|PA-?CF|PA\d*|PP|PEEK|PEKK|PCTG|HIPS|PSU|PPSU)\b/i)||[])[1]||null;
+    const rng=re=>{const m=t.match(re);return m?(m[2]?[+m[1],+m[2]]:[+m[1],+m[1]]):null;};
+    const noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
+    const bed=rng(/(?:heat\s*bed|heatbed|\bbed\b)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
+    const spd=(t.match(/(\d{2,4})\s*mm\s*\/?\s*s/i)||[])[1];
+    return {fam,noz,bed,spd:spd?+spd:null};
+  }
+  function renderLabelResult(p,cands){
+    const fam=p.fam?p.fam.toUpperCase():null;
+    const rng=r=>r?(r[0]===r[1]?r[0]:r[0]+"–"+r[1]):null;
+    const nz=rng(p.noz),bd=rng(p.bed);
+    const tiles=[];
+    if(nz)tiles.push(`<div class="tile"><div class="k">Nozzle · label</div><div class="v tnum">${nz}<span class="u"> °C</span></div></div>`);
+    if(bd)tiles.push(`<div class="tile"><div class="k">Bed · label</div><div class="v tnum">${bd}<span class="u"> °C</span></div></div>`);
+    if(p.spd)tiles.push(`<div class="tile"><div class="k">Speed · label</div><div class="v tnum">${p.spd}<span class="u"> mm/s</span></div></div>`);
+    shown=cands;
+    const cbtns=cands.length
+      ? `<div class="prov" style="padding-bottom:6px"><b>Match in our database</b> — tap for consensus + strength/finish goal:</div><div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px">${cands.slice(0,6).map((m,j)=>`<button class="btn cand" data-j="${j}" style="font-size:12.5px">${esc(m.brand)} ${esc(m.product)}</button>`).join("")}</div>`
+      : `<div class="prov">No close database match — the label's own values above are your reference.</div>`;
+    card.className="on";
+    card.innerHTML=`<div class="rc">
+      <div class="rc-head"><div class="name">📷 Read from your label</div>
+        <div class="chips">${fam?`<span class="chip">${esc(fam)}</span>`:""}<span class="chip warn">OCR — verify against the spool</span></div></div>
+      ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No temperatures detected — try search by name.</div>`}
+      ${cbtns}
+    </div>`;
+    card.querySelectorAll(".cand").forEach(b=>b.onclick=()=>pick(shown[+b.dataset.j]));
   }
 
   // ---- result + export ----
