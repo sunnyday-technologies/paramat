@@ -143,7 +143,7 @@
     </nav>
   </div>
 </div>
-<div class="heroband" id="heroband" style="background-image:url(hero.jpg)">
+<div class="heroband" id="heroband" style="background-image:url(hero.jpg?v=2)">
   <div class="shade"></div>
   <div class="wrap">
     <header>
@@ -272,7 +272,7 @@
     if(innerWidth<640)return;
     const v=document.createElement("video");
     v.muted=true;v.loop=true;v.playsInline=true;v.autoplay=true;v.preload="metadata";
-    v.setAttribute("aria-hidden","true");v.src="hero.mp4";
+    v.setAttribute("aria-hidden","true");v.src="hero.mp4?v=2";
     v.addEventListener("canplay",()=>{v.classList.add("on");v.play().catch(()=>{})});
     document.getElementById("heroband").prepend(v);
   }catch(e){}})();
