@@ -41,6 +41,12 @@
   details.more>summary{padding:12px 20px;cursor:pointer;font-size:13px;font-weight:600;color:var(--cool);list-style:none}
   details.more>summary::-webkit-details-marker{display:none}
   details.more[open]>summary{color:var(--ink2)}
+  #editbox:empty{display:none}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 8px}
+  .fld{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .fld label{font:10.5px ui-monospace,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+  .fld input,.fld select,.fld textarea{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:15px;font-family:inherit}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--accent)}
   .rc{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .rc-head{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
   .rc-head .name{font-size:21px;font-weight:800;letter-spacing:-.01em}.rc-head .name .brand{color:var(--accent)}
@@ -91,7 +97,11 @@
   <div class="hint"><span id="count"></span> · barcode works for <span id="gcount"></span> SKUs; <b>Read label</b> works for any spool — point at the printed name.</div>
   <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
   <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
-  <div style="margin-top:8px"><button class="btn" id="shelfbtn" style="width:100%;justify-content:center">🗄 My filaments (<span id="shelfcount">0</span>)</button></div>
+  <div class="row" style="margin-top:8px">
+    <button class="btn" id="shelfbtn" style="flex:1;justify-content:center">🗄 My filaments (<span id="shelfcount">0</span>)</button>
+    <button class="btn" id="addbtn" style="flex:1;justify-content:center">＋ Add manually</button>
+  </div>
+  <div id="editbox"></div>
   <div id="shelfpanel"></div>
 
   <div id="card"></div>
@@ -268,34 +278,105 @@
 
   // ---- personal shelf: on-device inventory of YOUR spools (works for rare/uncatalogued) ----
   const SHELF="paramat_shelf_v1";
+  const FAMS=["PLA","PETG","ABS","ASA","TPU","TPE","PC","PCTG","PET","PA","PA-CF","PP","PVA","PVB","PCL","HIPS","PEEK","PEKK","PSU","PPSU","OTHER"];
   function shelfGet(){try{return JSON.parse(localStorage.getItem(SHELF)||"[]")}catch(e){return[]}}
-  function shelfSet(a){try{localStorage.setItem(SHELF,JSON.stringify(a))}catch(e){}updateShelf();}
-  function shelfAdd(it){it.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);it.ts=Date.now();const a=shelfGet();a.unshift(it);shelfSet(a);toast("Saved to your shelf");if(shelfOpen)renderShelf(true);}
+  function shelfSet(a){try{localStorage.setItem(SHELF,JSON.stringify(a))}catch(e){toast("Storage full — export a backup.")}updateShelf();}
+  function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+  function shelfAdd(it){it.id=newId();it.ts=Date.now();shelfSet([it].concat(shelfGet()));toast("Saved to your shelf");if(shelfOpen)renderShelf(true);}
   function shelfDel(id){shelfSet(shelfGet().filter(x=>x.id!==id));renderShelf(true);}
   function updateShelf(){const el=document.getElementById("shelfcount");if(el)el.textContent=shelfGet().length;}
   function fmtT(t){return t==null?"—":(Array.isArray(t)?(t[0]===t[1]?t[0]:t[0]+"–"+t[1]):t);}
   let shelfOpen=false;
   document.getElementById("shelfbtn").onclick=()=>{shelfOpen=!shelfOpen;renderShelf(shelfOpen);};
+  document.getElementById("addbtn").onclick=()=>openForm(null);
+
+  // manual add / edit — full editable profile, so rare filament works & values can be corrected
+  let editId=null;
+  function num(id){const x=document.getElementById(id).value.trim();return x===""?null:(+x);}
+  function openForm(item){
+    editId=item?item.id:null;const it=item||{};
+    const noz=Array.isArray(it.noz)?it.noz:(it.noz!=null?[it.noz,it.noz]:[null,null]);
+    const bed=Array.isArray(it.bed)?it.bed:(it.bed!=null?[it.bed,it.bed]:[null,null]);
+    const v=x=>x==null?"":x, cf=(it.family||"PLA").toUpperCase();
+    const F=(id,l,val,t,st)=>`<div class="fld"><label>${l}</label><input id="${id}" type="${t||'text'}" ${st||""} value="${esc(v(val))}"></div>`;
+    document.getElementById("editbox").innerHTML=`<div class="rc" style="margin-top:8px">
+      <div class="rc-head"><div class="name" style="font-size:16px">${editId?"Edit spool":"Add a spool manually"}</div></div>
+      <div class="fgrid" style="grid-template-columns:1fr;padding-top:12px"><div class="fld"><label>Name</label><input id="f_name" value="${esc(v(it.name))}" placeholder="e.g. Generic PVA — Transparent Yellow"></div></div>
+      <div class="fgrid">
+        <div class="fld"><label>Family</label><select id="f_fam">${FAMS.map(f=>`<option ${f===cf?"selected":""}>${f}</option>`).join("")}</select></div>
+        ${F("f_brand","Brand (optional)",it.brand)}
+        ${F("f_nzl","Nozzle min °C",noz[0],"number")}${F("f_nzh","Nozzle max °C",noz[1],"number")}
+        ${F("f_bdl","Bed min °C",bed[0],"number")}${F("f_bdh","Bed max °C",bed[1],"number")}
+        ${F("f_flow","Flow ratio",it.flow,"number",'step="0.01"')}${F("f_mvs","Max vol mm³/s",it.mvs,"number",'step="0.5"')}
+        ${F("f_retr","Retraction mm",it.retr,"number",'step="0.1"')}${F("f_retrv","Retract mm/s",it.retr_v,"number")}
+        ${F("f_fanl","Fan min %",it.fan_lo,"number")}${F("f_fanh","Fan max %",it.fan_hi,"number")}
+        ${F("f_pa","Pressure adv.",it.pa,"number",'step="0.001"')}${F("f_dry","Dry °C/hrs",it.drynote)}
+      </div>
+      <div class="fgrid" style="grid-template-columns:1fr"><div class="fld"><label>Notes</label><textarea id="f_notes" rows="2" placeholder="printer, tuned values, colour, spool weight…">${esc(v(it.notes))}</textarea></div></div>
+      <div class="exbtns" style="padding:2px 20px 18px"><button class="btn pri" id="f_save" style="justify-content:center">Save</button><button class="btn" id="f_cancel">Cancel</button></div>
+    </div>`;
+    document.getElementById("f_save").onclick=saveForm;
+    document.getElementById("f_cancel").onclick=()=>{document.getElementById("editbox").innerHTML="";editId=null;};
+    document.getElementById("editbox").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  function saveForm(){
+    const nl=num("f_nzl"),nh=num("f_nzh"),bl=num("f_bdl"),bh=num("f_bdh");
+    const it={name:document.getElementById("f_name").value.trim()||"Filament",family:document.getElementById("f_fam").value,
+      brand:document.getElementById("f_brand").value.trim()||null,
+      noz:(nl!=null||nh!=null)?[nl??nh,nh??nl]:null, bed:(bl!=null||bh!=null)?[bl??bh,bh??bl]:null,
+      flow:num("f_flow"),mvs:num("f_mvs"),retr:num("f_retr"),retr_v:num("f_retrv"),
+      fan_lo:num("f_fanl"),fan_hi:num("f_fanh"),pa:num("f_pa"),drynote:document.getElementById("f_dry").value.trim()||null,
+      notes:document.getElementById("f_notes").value.trim()||null, source:editId?undefined:"manual"};
+    if(editId){shelfSet(shelfGet().map(x=>x.id===editId?Object.assign({},x,it,{id:editId}):x));toast("Updated");}
+    else shelfAdd(it);
+    document.getElementById("editbox").innerHTML="";editId=null;shelfOpen=true;renderShelf(true);
+  }
+
   function renderShelf(open){
     const el=document.getElementById("shelfpanel");
     if(!open){el.innerHTML="";return;}
     const a=shelfGet();
+    const src={label:"from label",db:"from catalog",manual:"manual"};
     el.innerHTML=`<div class="rc" style="margin-top:8px">
-      <div class="rc-head" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div class="rc-head" style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
         <div class="name" style="font-size:16px">🗄 My filaments (${a.length})</div>
-        ${a.length?`<div class="row"><button class="btn" id="shelfjson" style="font-size:12px">JSON</button><button class="btn" id="shelfcsv" style="font-size:12px">CSV</button></div>`:""}
+        <div class="row" style="flex-wrap:wrap;gap:6px">
+          <button class="btn" id="shelfshare" style="font-size:12px">Share</button>
+          <label class="btn" style="font-size:12px">Import<input type="file" id="shelfimp" accept="application/json" style="display:none"></label>
+          ${a.length?`<button class="btn" id="shelfjson" style="font-size:12px">JSON</button><button class="btn" id="shelfcsv" style="font-size:12px">CSV</button>`:""}
+        </div>
       </div>
-      ${a.length?a.map(x=>`<div class="tile" style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--hair)">
-        <div style="min-width:0"><b>${esc(x.name||"Filament")}</b> <span class="chip" style="margin-left:4px">${esc(x.family||"?")}</span><br>
-          <span style="color:var(--ink2);font-size:12.5px">nozzle ${fmtT(x.noz)} °C · bed ${fmtT(x.bed)} °C${x.spd?` · ${x.spd} mm/s`:""} · <span style="color:var(--ink3)">${x.source==="label"?"from label":"from catalog"}</span></span></div>
-        <button class="btn" data-del="${x.id}" style="font-size:13px;padding:0 11px">✕</button></div>`).join("")
-      :`<div class="prov">Empty. Read a label (or pick a match), then <b>Save</b> — builds your own catalog of even rare, non-listed filament, on your device.</div>`}
+      ${a.length?a.map(x=>`<div class="tile" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid var(--hair)">
+        <div style="min-width:0"><b>${esc(x.name||"Filament")}</b> <span class="chip" style="margin-left:4px">${esc(x.family||"?")}</span>
+          <div style="color:var(--ink2);font-size:12.5px;margin-top:3px">nozzle ${fmtT(x.noz)} °C · bed ${fmtT(x.bed)} °C${x.mvs?` · ${x.mvs} mm³/s`:""}${x.retr?` · retr ${x.retr}mm`:""} · <span style="color:var(--ink3)">${src[x.source]||"saved"}</span></div>
+          ${x.notes?`<div style="color:var(--ink3);font-size:12px;margin-top:2px">${esc(x.notes)}</div>`:""}</div>
+        <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn" data-edit="${x.id}" style="font-size:13px;padding:0 10px">✎</button><button class="btn" data-del="${x.id}" style="font-size:13px;padding:0 10px">✕</button></div></div>`).join("")
+      :`<div class="prov">Empty. Read a label, pick a match, or <b>Add manually</b> — builds your own catalog of even rare, non-listed filament, on your device. Export a backup so it's never lost.</div>`}
     </div>`;
     el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>shelfDel(b.dataset.del));
+    el.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openForm(shelfGet().find(y=>y.id===b.dataset.edit)));
     const j=document.getElementById("shelfjson"),c=document.getElementById("shelfcsv");
     if(j)j.onclick=()=>dl("my-filaments.json",JSON.stringify(shelfGet(),null,2),"application/json");
-    if(c)c.onclick=()=>{const rows=[["name","family","nozzle_c","bed_c","speed_mm_s","source"]].concat(shelfGet().map(x=>[x.name||"",x.family||"",fmtT(x.noz),fmtT(x.bed),x.spd||"",x.source||""]));dl("my-filaments.csv",rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"),"text/csv");};
+    if(c)c.onclick=()=>{const rows=[["name","brand","family","nozzle_c","bed_c","flow","max_vol_mm3s","retraction_mm","fan_min","fan_max","notes","source"]].concat(shelfGet().map(x=>[x.name||"",x.brand||"",x.family||"",fmtT(x.noz),fmtT(x.bed),x.flow||"",x.mvs||"",x.retr||"",x.fan_lo||"",x.fan_hi||"",x.notes||"",x.source||""]));dl("my-filaments.csv",rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"),"text/csv");};
+    document.getElementById("shelfimp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+      r.onload=()=>{try{const imp=JSON.parse(r.result);if(!Array.isArray(imp)){toast("Not a shelf backup");return}
+        const cur=shelfGet(),ids=new Set(cur.map(x=>x.id));let add=0;
+        imp.forEach(x=>{if(x&&typeof x==="object"){if(!x.id||ids.has(x.id))x.id=newId();cur.push(x);ids.add(x.id);add++}});
+        shelfSet(cur);toast("Imported "+add);renderShelf(true);}catch(err){toast("Import failed — not valid JSON")}};
+      r.readAsText(f);};
+    document.getElementById("shelfshare").onclick=()=>{
+      try{const s=btoa(unescape(encodeURIComponent(JSON.stringify(shelfGet()))));
+        if(s.length>7000){toast("Too many to share by link — use Export JSON");return}
+        const url=location.origin+location.pathname+"#shelf="+s;
+        navigator.clipboard.writeText(url).then(()=>toast("Share link copied"),()=>toast(url));
+      }catch(e){toast("Share failed — use Export")}};
   }
+  // import a shared shelf from the URL (#shelf=…), opt-in
+  (function(){const h=location.hash.match(/#shelf=(.+)/);if(!h)return;
+    try{const imp=JSON.parse(decodeURIComponent(escape(atob(h[1]))));
+      if(Array.isArray(imp)&&imp.length&&confirm("Import "+imp.length+" filament(s) from this link into your shelf?")){
+        const cur=shelfGet(),ids=new Set(cur.map(x=>x.id));imp.forEach(x=>{if(!x.id||ids.has(x.id))x.id=newId();cur.push(x)});shelfSet(cur);toast("Imported "+imp.length);}
+      history.replaceState(null,"",location.pathname);}catch(e){}})();
   updateShelf();
 
   // ---- result + export ----
