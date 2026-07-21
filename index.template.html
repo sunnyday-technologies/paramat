@@ -186,7 +186,7 @@
     ABS:{dry:1,t:65,h:4,enc:1},ASA:{dry:1,t:70,h:4,enc:1},HIPS:{dry:1,t:65,h:4,enc:1},
     TPU:{dry:2,t:60,h:8},TPE:{dry:2,t:55,h:8},PC:{dry:2,t:80,h:6,enc:1},PP:{dry:1,t:60,h:6,enc:1},
     PA:{dry:2,t:80,h:12,enc:1},"PA-CF":{dry:2,t:80,h:12,enc:1},PVA:{dry:2,t:45,h:8},PVB:{dry:1,t:55,h:6},
-    PCL:{dry:0},PEEK:{dry:2,t:120,h:3,enc:2},PEKK:{dry:2,t:120,h:3,enc:2},PSU:{dry:2,t:120,h:3,enc:2},PPSU:{dry:2,t:120,h:3,enc:2},OTHER:{dry:1}};
+    PCL:{dry:0},PPS:{dry:1,t:120,h:4,enc:1},PEEK:{dry:2,t:120,h:3,enc:2},PEKK:{dry:2,t:120,h:3,enc:2},PSU:{dry:2,t:120,h:3,enc:2},PPSU:{dry:2,t:120,h:3,enc:2},OTHER:{dry:1}};
   function metaChips(fam){
     const m=FAMILY_META[String(fam||"").toUpperCase()]||{};let h="";
     if(m.dry>=1)h+=`<span class="chip warn">💧 ${m.dry>=2?"Dry before use":"Drying recommended"}${m.t?` · ${m.t}°C/${m.h}h`:""}</span>`;
@@ -406,7 +406,7 @@
 
   // ---- personal shelf: on-device inventory of YOUR spools (works for rare/uncatalogued) ----
   const SHELF="paramat_shelf_v1";
-  const FAMS=["PLA","PETG","ABS","ASA","TPU","TPE","PC","PCTG","PET","PA","PA-CF","PP","PVA","PVB","PCL","HIPS","PEEK","PEKK","PSU","PPSU","OTHER"];
+  const FAMS=["PLA","PETG","ABS","ASA","TPU","TPE","PC","PCTG","PET","PA","PA-CF","PP","PPS","PVA","PVB","PCL","HIPS","PEEK","PEKK","PSU","PPSU","OTHER"];
   function shelfGet(){try{return JSON.parse(localStorage.getItem(SHELF)||"[]")}catch(e){return[]}}
   function shelfSet(a){try{localStorage.setItem(SHELF,JSON.stringify(a))}catch(e){toast("Storage full — export a backup.")}updateShelf();}
   function newId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
