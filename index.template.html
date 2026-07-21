@@ -110,6 +110,31 @@
   const RAW=JSON.parse(document.getElementById("d").textContent);
   const DATA=RAW.materials, GTIN=RAW.gtin||{};
   const FAM2OPT={PLA:"PLA",PETG:"PETG",TPU:"TPU",ABS:"ABS",ASA:"ASA",PC:"PC",PCTG:"PCTG",PP:"PP",TPE:"TPE",HIPS:"HIPS"};
+  // Family-level handling guidance (dry: 0 none/1 recommended/2 required; enc: enclosure)
+  const FAMILY_META={
+    PLA:{dry:0},PLA_CF:{dry:0},PETG:{dry:1,t:65,h:6},PCTG:{dry:1,t:65,h:6},PET:{dry:1,t:65,h:6},
+    ABS:{dry:1,t:65,h:4,enc:1},ASA:{dry:1,t:70,h:4,enc:1},HIPS:{dry:1,t:65,h:4,enc:1},
+    TPU:{dry:2,t:60,h:8},TPE:{dry:2,t:55,h:8},PC:{dry:2,t:80,h:6,enc:1},PP:{dry:1,t:60,h:6,enc:1},
+    PA:{dry:2,t:80,h:12,enc:1},"PA-CF":{dry:2,t:80,h:12,enc:1},PVA:{dry:2,t:45,h:8},PVB:{dry:1,t:55,h:6},
+    PCL:{dry:0},PEEK:{dry:2,t:120,h:3,enc:2},PEKK:{dry:2,t:120,h:3,enc:2},PSU:{dry:2,t:120,h:3,enc:2},PPSU:{dry:2,t:120,h:3,enc:2},OTHER:{dry:1}};
+  function metaChips(fam){
+    const m=FAMILY_META[String(fam||"").toUpperCase()]||{};let h="";
+    if(m.dry>=1)h+=`<span class="chip warn">💧 ${m.dry>=2?"Dry before use":"Drying recommended"}${m.t?` · ${m.t}°C/${m.h}h`:""}</span>`;
+    if(m.enc>=1)h+=`<span class="chip warn">📦 Enclosure ${m.enc>=2?"required":"recommended"}</span>`;
+    return h;
+  }
+  // Flammability is a CERTIFIED, product-specific rating (UL94) — never inferred.
+  // Only surfaced when the product name / label explicitly states it, marked "as stated".
+  function flameLabel(text){
+    const t=String(text||"");
+    let m=t.match(/\bUL[\s-]?94[\s-]?(V[\s-]?[012]|HB|5VA|5VB)?\b/i);
+    if(m)return m[1]?("UL94 "+m[1].toUpperCase().replace(/\s/,"-")):"UL94-rated";
+    m=t.match(/\bV[\s-]?([012])\b/);            // e.g. "PETG V0" on a filament label = UL94
+    if(m)return "UL94 V-"+m[1];
+    if(/\bflame[- ]?retardant\b|\bFR\b/i.test(t))return "Flame-retardant";
+    return null;
+  }
+  function flameChip(text){const f=flameLabel(text);return f?`<span class="chip">🔥 ${esc(f)} · as stated</span>`:"";}
   document.getElementById("count").textContent=DATA.length.toLocaleString()+" materials";
   document.getElementById("gcount").textContent=Object.keys(GTIN).length.toLocaleString()+" SKUs";
 
@@ -213,7 +238,7 @@
     const noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
     const bed=rng(/(?:heat\s*bed|heatbed|\bbed\b)\D{0,12}(\d{2,3})(?:\s*[-–~]\s*(\d{2,3}))?/i);
     const spd=(t.match(/(\d{2,4})\s*mm\s*\/?\s*s/i)||[])[1];
-    return {fam,noz,bed,spd:spd?+spd:null};
+    return {fam,noz,bed,spd:spd?+spd:null,flame:flameLabel(text)};
   }
   function renderLabelResult(p,cands){
     const fam=p.fam?p.fam.toUpperCase():null;
@@ -230,7 +255,7 @@
     card.className="on";
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name">📷 Read from your label</div>
-        <div class="chips">${fam?`<span class="chip">${esc(fam)}</span>`:""}<span class="chip warn">OCR — verify against the spool</span></div></div>
+        <div class="chips">${fam?`<span class="chip">${esc(fam)}</span>`:""}<span class="chip warn">OCR — verify against the spool</span>${metaChips(p.fam)}${p.flame?`<span class="chip">🔥 ${esc(p.flame)} · as stated</span>`:""}</div></div>
       ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No temperatures detected — try search by name.</div>`}
       <div class="export"><h3>🗄 Add to your shelf</h3>
         <div class="row"><input id="spoolname" placeholder="Name this spool" value="${esc(fam||'Filament')}" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)"><button class="btn pri" id="savespool" style="justify-content:center">Save</button></div></div>
@@ -311,7 +336,7 @@
     card.className="on";
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name"><span class="brand">${esc(m.brand)}</span> ${esc(m.product)}</div>
-        <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}</div></div>
+        <div class="chips"><span class="chip">${esc(m.family||"?")}</span>${conf}${m.perm?'<span class="chip ok">open license</span>':""}${metaChips(m.family)}${flameChip(m.product)}</div></div>
       <div class="goal">${["balanced","strength","finish","fast"].map(g=>`<button data-g="${g}" class="${g===goal?"on":""}">${g[0].toUpperCase()+g.slice(1)}${g==="balanced"?" ★":""}</button>`).join("")}</div>
       <div class="goal-note">${note}</div>
       <div class="hero"><div class="big tnum">${temp??"—"}<span class="u"> °C</span></div>
