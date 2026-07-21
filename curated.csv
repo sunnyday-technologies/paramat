@@ -1,0 +1,2 @@
+brand,product,material_family,nozzle_min_c,nozzle_max_c,bed_min_c,bed_max_c,provenance
+YOYI,PETG,PETG,210,240,,,"Spool label: 'RCMD Print Temp:210C-240C' (spool photo 2026-07-21). Vendor retail listing states 200-240 C; label kept as primary. Bed not stated on label - left empty."
