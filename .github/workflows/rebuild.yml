@@ -1,0 +1,24 @@
+name: Rebuild tool on data change
+on:
+  workflow_dispatch:
+  push:
+    paths: [data.json, index.template.html, build.py]
+permissions:
+  contents: write
+concurrency: rebuild
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python build.py
+      - name: Commit rebuilt index.html
+        run: |
+          git config user.name "paramat-ci"
+          git config user.email "ci@sunn3d.com"
+          git add index.html
+          if git diff --cached --quiet; then echo "no changes"; else
+            git commit -m "auto: rebuild index.html from data change"; git push; fi
