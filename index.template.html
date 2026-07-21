@@ -136,15 +136,24 @@
     h5q=new Html5Qrcode("reader",{formatsToSupport:[F.EAN_13,F.EAN_8,F.UPC_A,F.UPC_E,F.QR_CODE,F.CODE_128],verbose:false});
     scanbox.classList.add("on");scanning=true;scanmsg.textContent="Point the camera at the spool barcode…";
     try{await h5q.start({facingMode:"environment"},{fps:10,qrbox:{width:260,height:160}},
-      t=>onCode(String(t).replace(/\D/g,"")),()=>{});}
+      t=>onScan(String(t)),()=>{});}
     catch(e){toast("Allow camera access to scan.");await stopScan();}
   };
   async function stopScan(){scanning=false;if(h5q){try{await h5q.stop();h5q.clear();}catch(e){}h5q=null}scanbox.classList.remove("on");}
-  function onCode(code){
-    if(!code)return;
-    for(const c of [code,code.replace(/^0+/,""),"0"+code,"00"+code]){
-      if(GTIN[c]!=null){stopScan();toast("Matched "+c);pick(DATA[GTIN[c]]);return}}
-    scanmsg.textContent="Scanned "+code+" — not a known product code (may be a lot/batch number). Try Read label or search.";
+  // Handles both retail barcodes AND QR content. SECURITY: QR text is untrusted —
+  // we only parse it for identity and NEVER navigate to or open any embedded URL.
+  function onScan(raw){
+    raw=(raw||"").trim();if(!raw)return;
+    const digits=raw.replace(/\D/g,"");
+    if(/^\d{6,14}$/.test(digits) && !/https?:|[a-z]{4,}/i.test(raw)){
+      for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
+        if(GTIN[c]!=null){stopScan();toast("Matched "+c);pick(DATA[GTIN[c]]);return}}
+    }
+    // QR / alphanumeric code: extract identity from the text (e.g. a URL slug like
+    // ".../prusament-petg-v0"), match to our data — no navigation, no fetch.
+    const parsed=parseLabel(raw),cands=fuzzyMatch(raw,8);
+    if(parsed.noz||parsed.bed||cands.length){stopScan();toast("Identified from code");renderLabelResult(parsed,cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});return;}
+    scanmsg.textContent="Read a code but couldn't identify the filament (likely a lot number or a maker link we don't open). Try Read label or search.";
   }
 
   // ---- label OCR (Tesseract.js, lazy-loaded) — works for ANY spool ----
