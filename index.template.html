@@ -87,6 +87,8 @@
   <div class="hint"><span id="count"></span> · barcode works for <span id="gcount"></span> SKUs; <b>Read label</b> works for any spool — point at the printed name.</div>
   <div id="scanbox"><div id="reader"></div><div class="hint" id="scanmsg">Point the camera at the spool barcode…</div></div>
   <div id="ocrbox"><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;justify-content:center">Capture &amp; read label</button></div><div class="hint" id="ocrmsg"></div></div>
+  <div style="margin-top:8px"><button class="btn" id="shelfbtn" style="width:100%;justify-content:center">🗄 My filaments (<span id="shelfcount">0</span>)</button></div>
+  <div id="shelfpanel"></div>
 
   <div id="card"></div>
 
@@ -225,10 +227,46 @@
       <div class="rc-head"><div class="name">📷 Read from your label</div>
         <div class="chips">${fam?`<span class="chip">${esc(fam)}</span>`:""}<span class="chip warn">OCR — verify against the spool</span></div></div>
       ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No temperatures detected — try search by name.</div>`}
+      <div class="export"><h3>🗄 Add to your shelf</h3>
+        <div class="row"><input id="spoolname" placeholder="Name this spool" value="${esc(fam||'Filament')}" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)"><button class="btn pri" id="savespool" style="justify-content:center">Save</button></div></div>
       ${cbtns}
     </div>`;
     card.querySelectorAll(".cand").forEach(b=>b.onclick=()=>pick(shown[+b.dataset.j]));
+    const sv=document.getElementById("savespool");
+    if(sv)sv.onclick=()=>shelfAdd({name:(document.getElementById("spoolname").value||fam||"Filament"),family:fam,noz:p.noz,bed:p.bed,spd:p.spd,source:"label"});
   }
+
+  // ---- personal shelf: on-device inventory of YOUR spools (works for rare/uncatalogued) ----
+  const SHELF="paramat_shelf_v1";
+  function shelfGet(){try{return JSON.parse(localStorage.getItem(SHELF)||"[]")}catch(e){return[]}}
+  function shelfSet(a){try{localStorage.setItem(SHELF,JSON.stringify(a))}catch(e){}updateShelf();}
+  function shelfAdd(it){it.id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);it.ts=Date.now();const a=shelfGet();a.unshift(it);shelfSet(a);toast("Saved to your shelf");if(shelfOpen)renderShelf(true);}
+  function shelfDel(id){shelfSet(shelfGet().filter(x=>x.id!==id));renderShelf(true);}
+  function updateShelf(){const el=document.getElementById("shelfcount");if(el)el.textContent=shelfGet().length;}
+  function fmtT(t){return t==null?"—":(Array.isArray(t)?(t[0]===t[1]?t[0]:t[0]+"–"+t[1]):t);}
+  let shelfOpen=false;
+  document.getElementById("shelfbtn").onclick=()=>{shelfOpen=!shelfOpen;renderShelf(shelfOpen);};
+  function renderShelf(open){
+    const el=document.getElementById("shelfpanel");
+    if(!open){el.innerHTML="";return;}
+    const a=shelfGet();
+    el.innerHTML=`<div class="rc" style="margin-top:8px">
+      <div class="rc-head" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div class="name" style="font-size:16px">🗄 My filaments (${a.length})</div>
+        ${a.length?`<div class="row"><button class="btn" id="shelfjson" style="font-size:12px">JSON</button><button class="btn" id="shelfcsv" style="font-size:12px">CSV</button></div>`:""}
+      </div>
+      ${a.length?a.map(x=>`<div class="tile" style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--hair)">
+        <div style="min-width:0"><b>${esc(x.name||"Filament")}</b> <span class="chip" style="margin-left:4px">${esc(x.family||"?")}</span><br>
+          <span style="color:var(--ink2);font-size:12.5px">nozzle ${fmtT(x.noz)} °C · bed ${fmtT(x.bed)} °C${x.spd?` · ${x.spd} mm/s`:""} · <span style="color:var(--ink3)">${x.source==="label"?"from label":"from catalog"}</span></span></div>
+        <button class="btn" data-del="${x.id}" style="font-size:13px;padding:0 11px">✕</button></div>`).join("")
+      :`<div class="prov">Empty. Read a label (or pick a match), then <b>Save</b> — builds your own catalog of even rare, non-listed filament, on your device.</div>`}
+    </div>`;
+    el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>shelfDel(b.dataset.del));
+    const j=document.getElementById("shelfjson"),c=document.getElementById("shelfcsv");
+    if(j)j.onclick=()=>dl("my-filaments.json",JSON.stringify(shelfGet(),null,2),"application/json");
+    if(c)c.onclick=()=>{const rows=[["name","family","nozzle_c","bed_c","speed_mm_s","source"]].concat(shelfGet().map(x=>[x.name||"",x.family||"",fmtT(x.noz),fmtT(x.bed),x.spd||"",x.source||""]));dl("my-filaments.csv",rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"),"text/csv");};
+  }
+  updateShelf();
 
   // ---- result + export ----
   let cur=null,goal="balanced";
@@ -275,6 +313,7 @@
         <h3>🏷️ Assign to a reusable RFID tag</h3>
         <div class="note">Write these conditions to an NFC tag on your spool. OpenPrintTag = the open standard (Prusa, MIT); OpenSpool JSON writes directly and drives a Bambu AMS via the OpenSpool bridge.</div>
         <div class="exbtns">
+          <button class="btn" id="saveshelf">🗄 Save to shelf</button>
           <button class="btn pri" id="nfc">Write to NFC tag</button>
           <button class="btn" id="dopt">Download OpenPrintTag (.yaml)</button>
           <button class="btn" id="dos">Copy OpenSpool JSON</button>
@@ -287,6 +326,7 @@
     document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record")};
     document.getElementById("dos").onclick=()=>{navigator.clipboard.writeText(JSON.stringify(openSpool(m))).then(()=>toast("OpenSpool JSON copied"))};
     document.getElementById("nfc").onclick=()=>writeNFC(m);
+    document.getElementById("saveshelf").onclick=()=>shelfAdd({name:m.brand+" "+m.product,family:m.family,noz:(m.nmin!=null&&m.nmax!=null)?[m.nmin,m.nmax]:temp,bed:m.bed,spd:null,source:"db"});
   }
   async function writeNFC(m){
     if(!("NDEFReader"in window)){toast("Tap-to-write needs Chrome on Android (WebNFC). Use the download instead.");return}
