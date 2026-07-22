@@ -12,12 +12,14 @@
   --grid: #e8e8e6; --blue: #2a78d6; --blue-soft: #cfe0f5; --warn: #eda100;
   --v-dark: #7a7975; --v-water: #2a78d6; --v-z: #4a3aa7; --v-layout: #eb6834;
   --v-thick: #1baf7a; --v-std: #eda100; --v-cal: #e87ba4; --v-floor: #008300;
+  --v-tool: #96642e; --v-rep: #b5b4ae;
 }
 @media (prefers-color-scheme: dark) { :root {
   --surface: #1a1a19; --panel: #242423; --ink: #ffffff; --ink2: #c3c2b7;
   --grid: #3a3a38; --blue: #3987e5; --blue-soft: #24466e;
   --v-dark: #8a8985; --v-water: #3987e5; --v-z: #9085e9; --v-layout: #d95926;
   --v-thick: #199e70; --v-std: #c98500; --v-cal: #d55181; --v-floor: #008300;
+  --v-tool: #b07c3e; --v-rep: #56554f;
 }}
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--surface); color: var(--ink);
@@ -44,6 +46,8 @@ select:disabled { opacity: .55; }
 .big small { font-size: 1.1rem; font-weight: 400; color: var(--ink2); }
 .pis { margin-top: .8rem; font-size: .9rem; color: var(--ink2); }
 .pis b { color: var(--ink); font-weight: 600; }
+.spec { margin: .9rem 0 .2rem; }
+.spec svg { width: 100%; max-width: 380px; height: auto; display: block; }
 .band { position: relative; height: 26px; margin: 1rem 0 .2rem; }
 .band .track { position: absolute; inset: 10px 0; background: var(--grid); border-radius: 4px; }
 .band .cross { position: absolute; top: 8px; height: 10px; background: var(--blue-soft); border-radius: 4px; }
@@ -83,6 +87,8 @@ select:disabled { opacity: .55; }
 </div>
 <div class="tile">
   <div class="big"><span id="val">—</span> <small>MPa predicted tensile</small></div>
+  <div class="spec"><svg id="spec" viewBox="0 0 340 112" role="img" aria-label="Representative printed tensile coupon showing print paths"></svg>
+  <div class="hint" id="specnote"></div></div>
   <div class="band"><div class="track"></div><div class="cross" id="bx"></div>
     <div class="cv" id="bc"></div><div class="pt" id="bp"></div></div>
   <div class="axis"><span id="ax0">0</span><span id="ax1"></span></div>
@@ -107,8 +113,8 @@ select:disabled { opacity: .55; }
   especially any family beyond PLA/ABS (our Z data covers only those two).</p>
   <p>🛏 <b>Plate layout & interlayer time</b> — 10%: the same coupon printed
   solo vs ×4 vs ×9 per plate, 3 reps. Nobody publishes this; ~9 coupons.</p>
-  <p>📐 <b>Geometry: specimen standard & thickness</b> — 7–8% each (~10.6%
-  clustered): one material across ISO 527-1B vs ASTM D638-I and two
+  <p>📐 <b>Geometry: specimen standard (7%) & thickness (8%)</b> — kept as
+  separate factors: one material across ISO 527-1B vs ASTM D638-I and two
   thicknesses. (D638 reads +13–20% higher on the same material.)</p>
   <p>🧭 <b>Toolpath / G-code detail</b> — ~5%: seam position, per-layer raster
   order, crosshatch alternation — the path semantics papers leave unstated
@@ -119,9 +125,9 @@ select:disabled { opacity: .55; }
   which fan, nozzle and bed moved together</b> — so treat it as an upper bound.
   Wanted: an independent fan sweep — one hot family (ABS/ASA/PC), fan 0/50/100%,
   everything else fixed, ≥3 reps ≈ 9 coupons. Cheapest high-value DoE on this list.</p>
-  <p>🌡 <b>Machine calibration</b> — 5% each for temp set-vs-actual and true
-  speed (~7.1% clustered): report thermocouple nozzle checks and motion logs
-  alongside any DoE — nearly free, rarely done.</p>
+  <p>🌡 <b>Machine: temp set-vs-actual (5%) and true speed (5%)</b> — separate
+  factors with separate fixes: thermocouple nozzle checks, and motion logs on
+  accel-limited short coupons — nearly free, rarely done.</p>
   <p>🎯 <b>Replicate floor: 3–4.5%</b> in-plane — the irreducible target. Fully
   specified studies already land ON it in our held-out tests; every field you
   report moves your data toward that floor.</p>
@@ -195,11 +201,13 @@ const VSRC = [
   ["non-attributed (batch, additives, lab & machine systematics)", 25.0, "--v-dark", false],
   ["water state", 14, "--v-water", false],
   ["trans-layer (Z)", 11.2, "--v-z", true],
-  ["geometry (test standard + specimen thickness)", 10.6, "--v-thick", false],
   ["thermal history (plate layout / interlayer time)", 10, "--v-layout", false],
-  ["machine calibration (temp set-vs-actual, motion)", 7.1, "--v-cal", false],
-  ["toolpath / G-code detail (seam, raster order, alternation)", 5, "--v-std", false],
-  ["replicate floor", 4.5, "--v-floor", false],
+  ["geometry: specimen thickness", 8, "--v-thick", false],
+  ["geometry: test standard", 7, "--v-std", false],
+  ["machine: temp set-vs-actual", 5, "--v-cal", false],
+  ["machine: true speed vs set", 5, "--v-floor", false],
+  ["toolpath / G-code detail (seam, raster order, alternation)", 5, "--v-tool", false],
+  ["replicate floor", 4.5, "--v-rep", false],
 ];
 const $ = id => document.getElementById(id);
 const ids = ["fam","inf","lay","ras","ori","dt","wal","flo"];
@@ -221,7 +229,33 @@ function upd() {
   $("bnote").textContent = inf < 35
     ? "sparse infill: interval widened — low-% parts measurably scatter more (fewer, thinner load paths)"
     : "";
-  const upright = $("ori").value === "upright";
+  // representative coupon (generic proportions, NOT a standards drawing)
+  const uprightSpec = $("ori").value === "upright";
+  const wal_n = +$("wal").value, ras_a = +$("ras").value;
+  const bone = "M22,28 H92 C112,28 112,42 132,42 H208 C228,42 228,28 248,28 H318 V84 H248 C228,84 228,70 208,70 H132 C112,70 112,84 92,84 H22 Z";
+  const hatch = uprightSpec
+    ? `<pattern id="h" width="8" height="8" patternUnits="userSpaceOnUse"><line x1="4" y1="0" x2="4" y2="8" style="stroke:var(--v-z)" stroke-width="1.8"/></pattern>`
+    : `<pattern id="h" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(${ras_a} 170 56)"><line x1="0" y1="3.5" x2="7" y2="3.5" style="stroke:var(--ink2)" stroke-width="1"/></pattern>`;
+  const wallStroke = wal_n > 0 && !uprightSpec
+    ? `<path d="${bone}" fill="none" style="stroke:var(--blue)" stroke-width="${wal_n * 1.5}"/>` : "";
+  const wallStrokeUp = wal_n > 0 && uprightSpec
+    ? `<path d="${bone}" fill="none" style="stroke:var(--v-z)" stroke-width="2" stroke-dasharray="3 3"/>` : "";
+  $("spec").innerHTML = `<defs>${hatch}<clipPath id="cp"><path d="${bone}"/></clipPath></defs>
+    <rect x="0" y="0" width="340" height="112" fill="none"/>
+    <g clip-path="url(#cp)"><rect x="0" y="0" width="340" height="112" fill="url(#h)"/></g>
+    ${wallStroke}${wallStrokeUp}
+    <path d="${bone}" fill="none" style="stroke:var(--ink2)" stroke-width="1"/>
+    <line x1="2" y1="56" x2="18" y2="56" style="stroke:var(--ink)" stroke-width="1.5"/>
+    <polygon points="2,56 9,52.5 9,59.5" style="fill:var(--ink)"/>
+    <line x1="322" y1="56" x2="338" y2="56" style="stroke:var(--ink)" stroke-width="1.5"/>
+    <polygon points="338,56 331,52.5 331,59.5" style="fill:var(--ink)"/>`;
+  $("specnote").textContent = uprightSpec
+    ? "upright build (tested as shown): layer welds run ACROSS the load — every path crosses a weld plane; walls also cross-layer (dashed)"
+    : (wal_n > 0
+       ? `flat build: ${wal_n} perimeter wall${wal_n > 1 ? "s" : ""} follow the outline (load-aligned, blue); infill roads at ${ras_a}° to the load`
+       : `flat build, no walls (bare laminate): all roads at ${ras_a}° to the load`)
+      + " — representative geometry, not to standard scale";
+  const upright = uprightSpec;
   const act = VSRC.filter(v => !v[3] || upright);
   const tot = act.reduce((a, v) => a + v[1] * v[1], 0);
   $("vbar").innerHTML = act.map(v =>
