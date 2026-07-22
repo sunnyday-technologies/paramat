@@ -257,7 +257,12 @@ function upd() {
        : `flat build, no walls (bare laminate): all roads at ${ras_a}° to the load`)
       + " — representative geometry, not to standard scale";
   const upright = uprightSpec;
-  const act = VSRC.filter(v => !v[3] || upright);
+  // Family-resolved water sigma (our measured sorption data, PMC10304609 +
+  // budget bounds): PA saturates -50%; PETG high slope x uptake; PC/ABS low.
+  const WSIG = {"PA": 20, "PETG": 16, "PLA": 14, "ABS": 12, "ASA": 12,
+                "PC": 8, "PC-ABS": 10, "TPU": 12};
+  const act = VSRC.filter(v => !v[3] || upright).map(v =>
+    v[0] === "water state" ? [v[0], WSIG[$("fam").value] ?? 14, v[2], v[3]] : v);
   const tot = act.reduce((a, v) => a + v[1] * v[1], 0);
   $("vleg").innerHTML = act.map(v =>
     `<span><i style="background:var(${v[2]})"></i>${v[0]} ${(100 * v[1] * v[1] / tot).toFixed(0)}%</span>`).join("");
