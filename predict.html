@@ -259,11 +259,28 @@ function upd() {
   const upright = uprightSpec;
   const act = VSRC.filter(v => !v[3] || upright);
   const tot = act.reduce((a, v) => a + v[1] * v[1], 0);
-  $("vbar").innerHTML = act.map(v =>
-    `<div style="width:${(100 * v[1] * v[1] / tot).toFixed(1)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}% → ${(100 * v[1] * v[1] / tot).toFixed(0)}% of variance"></div>`).join("");
   $("vleg").innerHTML = act.map(v =>
     `<span><i style="background:var(${v[2]})"></i>${v[0]} ${(100 * v[1] * v[1] / tot).toFixed(0)}%</span>`).join("");
   const max = Math.max(80, Math.ceil(xhi / 10) * 10);
+  {
+    // Positional lane in MPa coordinates (updates with every input): lower
+    // span [xlo..p] carries all sources; upper span [p..xhi] all EXCEPT water
+    // (moisture only weakens). Non-attributed grey sits at BOTH tails.
+    const water = "water state", grey = act[0];
+    const pctv = v => 100 * v / max;
+    const seg = (x0, w, v) =>
+      `<div style="left:${pctv(x0).toFixed(2)}%;width:${Math.max(pctv(w), .6).toFixed(2)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}%"></div>`;
+    const lowOrder = [grey, ...act.filter(v => v[0] === water),
+                      ...act.slice(1).filter(v => v[0] !== water)];
+    const lowTot = lowOrder.reduce((a, v) => a + v[1] * v[1], 0);
+    let x = xlo, html = "";
+    for (const v of lowOrder) { const w = (p - xlo) * v[1] * v[1] / lowTot; html += seg(x, w, v); x += w; }
+    const upOrder = [...act.slice(1).filter(v => v[0] !== water).reverse(), grey];
+    const upTot = upOrder.reduce((a, v) => a + v[1] * v[1], 0);
+    x = p;
+    for (const v of upOrder) { const w = (xhi - p) * v[1] * v[1] / upTot; html += seg(x, w, v); x += w; }
+    $("vbar").innerHTML = html;
+  }
   $("ax1").textContent = max + " MPa";
   const pct = v => (100 * v / max) + "%";
   $("bx").style.left = pct(xlo); $("bx").style.width = pct(xhi - xlo);
