@@ -132,6 +132,14 @@ select:disabled { opacity: .55; }
   <p>🎯 <b>Replicate floor: 3–4.5%</b> in-plane — the irreducible target. Fully
   specified studies already land ON it in our held-out tests; every field you
   report moves your data toward that floor.</p>
+  <p>🌗 <b>Inside the grey — the known unknowns.</b> Downside (no data yet):
+  pigment & additive packages within a "family" · filament diameter tolerance ·
+  nozzle wear (line-width drift) · storage aging · printer motion quality ·
+  test-lab systematics. <b>Upside — factors that make prints BETTER than
+  nominal:</b> annealing / crystallinity from warm chambers & slow cooling ·
+  above-spec resin batches (we measured one filament +9.4% over its own
+  datasheet) · truly-dry filament · hot, short-interlayer-time welds on small
+  fast parts. Each of these is a dataset away from leaving the grey.</p>
   <p>🌑 <b>Non-attributed ~25%</b>: what remains after every named source —
   resin batch, additive packages within a "family", lab & machine systematics.
   Sized by closure: observed cross-study residual 33.6% minus the named budget
@@ -272,18 +280,26 @@ function upd() {
     // span [xlo..p] carries all sources; upper span [p..xhi] all EXCEPT water
     // (moisture only weakens). Non-attributed grey sits at BOTH tails.
     const water = "water state", grey = act[0];
+    const GREY_LO = "non-attributed DOWNSIDE (no data yet): pigment/additive packages, filament diameter tolerance, nozzle wear, storage aging, motion quality, lab systematics";
+    const GREY_HI = "non-attributed UPSIDE (no data yet — these make prints BETTER than nominal): annealing / crystallinity from warm chambers, above-spec resin batches (we measured one at +9.4%), truly-dry filament, hot short-interlayer-time welds";
     const pctv = v => 100 * v / max;
-    const seg = (x0, w, v) =>
-      `<div style="left:${pctv(x0).toFixed(3)}%;width:${pctv(w).toFixed(3)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}%"></div>`;
-    const lowOrder = [grey, ...act.filter(v => v[0] === water),
-                      ...act.slice(1).filter(v => v[0] !== water)];
+    const seg = (x0, w, v, t) =>
+      `<div style="left:${pctv(x0).toFixed(3)}%;width:${pctv(w).toFixed(3)}%;background:var(${v[2]})" title="${t || (v[0] + " — σ≈" + v[1] + "%")}"></div>`;
+    // RANKED placement: distance from the point encodes impact — largest
+    // named source sits outermost (next to the grey tail), smallest hugs
+    // the point. Water is the top-ranked named source, so it lands at the
+    // low extreme (it would only be displaced if toolpath etc. outgrew it).
+    const named = [...act.slice(1)].sort((a, b) => b[1] * b[1] - a[1] * a[1]);
+    const lowOrder = [grey, ...named];
     const lowTot = lowOrder.reduce((a, v) => a + v[1] * v[1], 0);
     let x = xlo, html = "";
-    for (const v of lowOrder) { const w = (p - xlo) * v[1] * v[1] / lowTot; html += seg(x, w, v); x += w; }
-    const upOrder = [...act.slice(1).filter(v => v[0] !== water).reverse(), grey];
+    for (const v of lowOrder) { const w = (p - xlo) * v[1] * v[1] / lowTot;
+      html += seg(x, w, v, v === grey ? GREY_LO : null); x += w; }
+    const upOrder = [...named.filter(v => v[0] !== water).reverse(), grey];
     const upTot = upOrder.reduce((a, v) => a + v[1] * v[1], 0);
     x = p;
-    for (const v of upOrder) { const w = (xhi - p) * v[1] * v[1] / upTot; html += seg(x, w, v); x += w; }
+    for (const v of upOrder) { const w = (xhi - p) * v[1] * v[1] / upTot;
+      html += seg(x, w, v, v === grey ? GREY_HI : null); x += w; }
     $("vbar").innerHTML = html;
   }
   $("ax1").textContent = max + " MPa";
