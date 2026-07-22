@@ -1,3 +1,7 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
 <title>PARAMAT3D Poly — exact print settings for your exact filament</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Free, open filament database: search or scan 3,700+ filaments, get cross-source consensus print settings (nozzle, bed, flow, drying), and export to your slicer or an NFC spool tag.">
@@ -150,12 +154,20 @@
   footer h4{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin:18px 0 5px}
   footer h4:first-child{margin-top:0}
   footer p{margin:0 0 8px;line-height:1.55}
+  .eco-scroll{overflow-x:auto;margin:0 0 8px}
+  .eco{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+  .eco th{text-align:left;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:10.5px;color:var(--ink3);padding:6px 10px 6px 0;border-bottom:1px solid var(--line)}
+  .eco td{padding:6px 10px 6px 0;border-bottom:1px solid var(--hair);vertical-align:top;line-height:1.45}
+  .eco td:first-child{white-space:nowrap;font-weight:600}
+  .eco tr.us td{background:var(--accent-soft)}
   .legalrow{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--hair)}
   .optin{display:flex;gap:9px;align-items:flex-start;margin-top:14px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:var(--card);color:var(--ink2);cursor:pointer;line-height:1.45}
   .optin input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}
   a{color:var(--cool)}#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--page);padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88vw;z-index:50}
   #toast.on{opacity:1}
 </style>
+</head>
+<body>
 
 <div class="brandbar">
   <div class="bb-in">
@@ -230,11 +242,44 @@
       Bambu AMS via its bridge) ·
       <a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a> (the open
       tag standard we export, MIT) ·
+      <a href="https://opentag3d.info" target="_blank" rel="noopener">OpenTag3D</a> (open NDEF spool-tag
+      spec; NDEF-compatible, so both records fit on one physical tag) ·
       <a href="https://github.com/Donkie/Spoolman" target="_blank" rel="noopener">Spoolman</a> (inventory
       server many readers integrate with) ·
       <a href="https://github.com/Bambu-Research-Group/RFID-Tag-Guide" target="_blank" rel="noopener">Bambu
       RFID research</a> (documents the proprietary tags). We don't sell or endorse specific hardware —
       any standards-compliant tag works.</p>
+    <h4>The ecosystem — who does what</h4>
+    <p>Nobody built this space alone. The projects below all serve the same shelf of spools;
+      here's the even map, ours included:</p>
+    <div class="eco-scroll"><table class="eco">
+      <tr><th>Project</th><th>What it offers</th><th>How</th><th>Model</th></tr>
+      <tr><td><a href="https://github.com/OpenFilamentCollective/open-filament-database" target="_blank" rel="noopener">Open Filament Database</a></td>
+        <td>community filament catalog — specs, brands, colors</td><td>open data repo, contributions by PR</td><td>MIT data</td></tr>
+      <tr><td>3D Filament Profiles</td>
+        <td>large community catalog of filament profiles</td><td>web form lookup</td><td>free site (data not openly licensed)</td></tr>
+      <tr><td><a href="https://github.com/Donkie/Spoolman" target="_blank" rel="noopener">Spoolman</a></td>
+        <td>spool inventory &amp; remaining-weight tracking</td><td>self-hosted server; many readers integrate</td><td>open source</td></tr>
+      <tr><td><a href="https://github.com/spuder/OpenSpool" target="_blank" rel="noopener">OpenSpool</a></td>
+        <td>NFC tag → Bambu AMS auto-apply</td><td>ESP32 + PN532 reader, MQTT bridge</td><td>open source</td></tr>
+      <tr><td><a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a> (Prusa)</td>
+        <td>open NFC spool-tag standard; printer readers coming</td><td>NDEF spec — material, color, settings, remaining length</td><td>open spec</td></tr>
+      <tr><td><a href="https://opentag3d.info" target="_blank" rel="noopener">OpenTag3D</a></td>
+        <td>open NDEF spool-tag spec with a vendor consortium</td><td>NDEF record on NTAG21x; dual-storable with OpenPrintTag</td><td>open spec</td></tr>
+      <tr><td>SimplyPrint</td>
+        <td>full print-farm platform: filament DB, tag read/write, inventory</td><td>cloud platform, all major tag standards</td><td>freemium SaaS</td></tr>
+      <tr><td><a href="https://github.com/SoftFever/OrcaSlicer" target="_blank" rel="noopener">Orca</a> / <a href="https://github.com/prusa3d/PrusaSlicer" target="_blank" rel="noopener">Prusa</a> / <a href="https://github.com/Ultimaker/Cura" target="_blank" rel="noopener">Cura</a> presets</td>
+        <td>per-brand tuned profiles inside each slicer</td><td>preset libraries shipped with the slicers</td><td>open source</td></tr>
+      <tr class="us"><td>ParaMat3D (this site)</td>
+        <td>cross-source consensus settings with the disagreement shown, barcode/label scan, open-tag write, strength prediction with calibrated uncertainty</td>
+        <td>merges the openly licensed sources; physics + measured-data model</td><td>MIT code · CC BY data · free</td></tr>
+    </table></div>
+    <p>Everyone above is credited as part of one ecosystem. We hyperlink the projects under
+      genuinely open licenses — including commercially backed open source — and take no affiliate
+      fees or paid placements. Research credit:
+      <a href="https://github.com/cam-cambridge/caxton" target="_blank" rel="noopener">CAXTON</a>
+      (Cambridge), the million-frame print-monitoring dataset behind our temperature-headroom
+      finding, and the university groups cited per-row in our data.</p>
     <h4>Disclaimer</h4>
     <p>Values are aggregated consensus suggestions, provided <b>AS IS</b> with no warranty — a <i>starting point, not a guarantee</i>. Always run a temperature tower / calibration print, and never exceed your filament's or hotend's rated limits. You are responsible for the settings you apply; ParaMat is not liable for failed prints or equipment damage.</p>
     <p><b>Max volumetric flow is also a hotend limit.</b> Verify with a quick extrude-in-air test at rising rates: the strand should coil out <i>soft</i> (fully melted); if it comes out <i>stiff/straight</i> you're past the melt capacity — slow down, run hotter, or fit a high-flow hotend. Method: <a href="https://ellis3dp.com/Print-Tuning-Guide/articles/determining_max_volumetric_flow_rate.html" target="_blank" rel="noopener">Ellis' Print Tuning Guide</a>.</p>
@@ -749,3 +794,5 @@
   }
 })();
 </script>
+</body>
+</html>
