@@ -55,9 +55,9 @@ select:disabled { opacity: .55; }
 .band .pt { position: absolute; top: 2px; width: 3px; height: 22px; background: var(--ink); border-radius: 2px; }
 .axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink2); }
 .vlab { font-size: .72rem; color: var(--ink2); margin-top: 1rem; text-transform: uppercase; letter-spacing: .05em; }
-.vbar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin-top: .35rem; }
-.vbar div { height: 100%; border-right: 2px solid var(--surface); }
-.vbar div:last-child { border-right: none; }
+.vbar { position: relative; height: 12px; margin: 2px 0 2px; }
+.vbar div { position: absolute; top: 1px; height: 10px; border-radius: 2px;
+  box-shadow: inset -2px 0 0 var(--surface); }
 .vleg { display: flex; flex-wrap: wrap; gap: .25rem .9rem; font-size: .72rem; color: var(--ink2); margin-top: .45rem; }
 .vleg span { display: inline-flex; align-items: center; gap: .35rem; }
 .vleg i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
@@ -91,12 +91,13 @@ select:disabled { opacity: .55; }
   <div class="hint" id="specnote"></div></div>
   <div class="band"><div class="track"></div><div class="cross" id="bx"></div>
     <div class="cv" id="bc"></div><div class="pt" id="bp"></div></div>
+  <div class="vbar" id="vbar" title="variance sources placed where they act on strength"></div>
   <div class="axis"><span id="ax0">0</span><span id="ax1"></span></div>
   <div class="pis">90% interval, cross-study (honest for a new material): <b id="px"></b><br>
   90% interval, within-corpus: <b id="pc"></b><br>
   <span id="bnote" class="hint"></span></div>
-  <div class="vlab">What makes it this wide — share of variance (measured budget)</div>
-  <div class="vbar" id="vbar"></div>
+  <div class="vlab">Variance sources, placed where they act — grey = non-attributed
+  (both tails); water low-side only (moisture only weakens)</div>
   <div class="vleg" id="vleg"></div>
 </div>
 <div class="note">
