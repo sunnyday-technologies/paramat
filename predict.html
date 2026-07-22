@@ -80,6 +80,36 @@ select:disabled { opacity: .55; }
   <span id="bnote" class="hint"></span></div>
 </div>
 <div class="note">
+  <p><b>Where the width comes from — and what to contribute.</b> The interval is
+  dominated by what published studies fail to report. Our measured uncertainty
+  budget (σ as % of strength when a factor goes unreported), each with the
+  peer-reviewed DoE that would collapse it:</p>
+  <p>💧 <b>Filament water state</b> (moisture, drying, storage age, ambient RH) —
+  <b>~14%, the biggest uncontrolled term</b>. Neat-filament sensitivity is now
+  measured for 12 materials; the missing piece is a <i>printed-coupon</i>
+  dry-vs-wet DoE: one PLA + one PA, dried / week-ambient / saturated, ≥3
+  replicates, conditioning stated. (~12 coupons, one print day.)</p>
+  <p>🧱 <b>Trans-layer (Z) scatter</b> — 11%: upright coupon series, ≥3 reps —
+  especially any family beyond PLA/ABS (our Z data covers only those two).</p>
+  <p>🛏 <b>Plate layout & interlayer time</b> — 10%: the same coupon printed
+  solo vs ×4 vs ×9 per plate, 3 reps. Nobody publishes this; ~9 coupons.</p>
+  <p>📐 <b>Specimen standard & thickness</b> — 7–8% each: one material across
+  ISO 527-1B vs ASTM D638-I and two thicknesses. (D638 reads +13–20% higher on
+  the same material.)</p>
+  <p>🌡 <b>Temp calibration & true speed</b> — 5% each: report thermocouple
+  nozzle checks and motion logs alongside any DoE — nearly free, rarely done.</p>
+  <p>🎯 <b>Replicate floor: 3–4.5%</b> in-plane — the irreducible target. Fully
+  specified studies already land ON it in our held-out tests; every field you
+  report moves your data toward that floor.</p>
+  <p>🌑 <b>Dark variance ~25%</b>: resin batch, additive packages within a
+  "family", lab systematics. Only shrinks via round-robins (same spool, many
+  labs/printers) — the hardest and most valuable contribution of all.</p>
+  <p>Complete metadata is the entire game: report <b>infill %, pattern, walls,
+  flow, measured part density, moisture/drying, fan, temps</b> and your data
+  enters the model at floor accuracy.
+  <a href="https://github.com/sunnyday-technologies/paramat/blob/main/CONTRIBUTING.md">How to contribute →</a></p>
+</div>
+<div class="note">
   <p><b>Factor catalogue — where the digital twin stands.</b> The input schema is
   Open3DPP (99 columns, Open3DCP-derived): one common dataset format for material ×
   process × geometry across all FDM systems. Factors graduate from <i>recorded</i> to
