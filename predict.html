@@ -107,22 +107,29 @@ select:disabled { opacity: .55; }
   especially any family beyond PLA/ABS (our Z data covers only those two).</p>
   <p>🛏 <b>Plate layout & interlayer time</b> — 10%: the same coupon printed
   solo vs ×4 vs ×9 per plate, 3 reps. Nobody publishes this; ~9 coupons.</p>
-  <p>📐 <b>Specimen standard & thickness</b> — 7–8% each: one material across
-  ISO 527-1B vs ASTM D638-I and two thicknesses. (D638 reads +13–20% higher on
-  the same material.)</p>
+  <p>📐 <b>Geometry: specimen standard & thickness</b> — 7–8% each (~10.6%
+  clustered): one material across ISO 527-1B vs ASTM D638-I and two
+  thicknesses. (D638 reads +13–20% higher on the same material.)</p>
+  <p>🧭 <b>Toolpath / G-code detail</b> — ~5%: seam position, per-layer raster
+  order, crosshatch alternation — the path semantics papers leave unstated
+  (our forensic pass had to correct several at ±5–8% effect). Contribute by
+  publishing the G-code or full toolpath parameters with any DoE.</p>
   <p>🌀 <b>Part-cooling fan on hot-bonding families</b> — a first-order lever
   (this model: ABS collapses ~58% at 100% fan) calibrated from <b>ONE study in
   which fan, nozzle and bed moved together</b> — so treat it as an upper bound.
   Wanted: an independent fan sweep — one hot family (ABS/ASA/PC), fan 0/50/100%,
   everything else fixed, ≥3 reps ≈ 9 coupons. Cheapest high-value DoE on this list.</p>
-  <p>🌡 <b>Temp calibration & true speed</b> — 5% each: report thermocouple
-  nozzle checks and motion logs alongside any DoE — nearly free, rarely done.</p>
+  <p>🌡 <b>Machine calibration</b> — 5% each for temp set-vs-actual and true
+  speed (~7.1% clustered): report thermocouple nozzle checks and motion logs
+  alongside any DoE — nearly free, rarely done.</p>
   <p>🎯 <b>Replicate floor: 3–4.5%</b> in-plane — the irreducible target. Fully
   specified studies already land ON it in our held-out tests; every field you
   report moves your data toward that floor.</p>
-  <p>🌑 <b>Dark variance ~25%</b>: resin batch, additive packages within a
-  "family", lab systematics. Only shrinks via round-robins (same spool, many
-  labs/printers) — the hardest and most valuable contribution of all.</p>
+  <p>🌑 <b>Non-attributed ~25%</b>: what remains after every named source —
+  resin batch, additive packages within a "family", lab & machine systematics.
+  Sized by closure: observed cross-study residual 33.6% minus the named budget
+  (RSS 22.5%). Only shrinks via round-robins (same spool, many labs/printers)
+  — the hardest and most valuable contribution of all.</p>
   <p>Complete metadata is the entire game: report <b>infill %, pattern, walls,
   flow, measured part density, moisture/drying, fan, temps</b> and your data
   enters the model at floor accuracy.
@@ -179,15 +186,19 @@ const FF = {"PLA": [1.0, 1.0, 1.0], "PETG": [1.0, 1.0, 1.0], "ABS": [1.0, 0.675,
 const SF = [1.0051, 1.0, 0.9898, 0.9764];    // exact speed factors (model-derived)
 // Uncertainty budget (sigma as % of strength, measured/lit-bounded; see the
 // variance section below). Shares shown are sigma^2 fractions — areas add
-// honestly. Trans-layer term joins only for upright builds.
+// honestly. Trans-layer term joins only for upright builds. Taxonomy:
+// geometry = specimen standard + thickness (RSS); machine = set-vs-actual
+// calibration; toolpath = unreported G-code detail (sized from the path-
+// semantics errors our forensic pass had to correct); non-attributed closes
+// the budget against the observed 33.6% cross-study residual (RSS).
 const VSRC = [
-  ["dark (batch, additives, lab)", 25.5, "--v-dark", false],
+  ["non-attributed (batch, additives, lab & machine systematics)", 25.0, "--v-dark", false],
   ["water state", 14, "--v-water", false],
   ["trans-layer (Z)", 11.2, "--v-z", true],
-  ["plate layout / interlayer time", 10, "--v-layout", false],
-  ["specimen thickness", 8, "--v-thick", false],
-  ["test standard", 7, "--v-std", false],
-  ["temp + speed calibration", 7.1, "--v-cal", false],
+  ["geometry (test standard + specimen thickness)", 10.6, "--v-thick", false],
+  ["thermal history (plate layout / interlayer time)", 10, "--v-layout", false],
+  ["machine calibration (temp set-vs-actual, motion)", 7.1, "--v-cal", false],
+  ["toolpath / G-code detail (seam, raster order, alternation)", 5, "--v-std", false],
   ["replicate floor", 4.5, "--v-floor", false],
 ];
 const $ = id => document.getElementById(id);
