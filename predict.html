@@ -10,10 +10,14 @@
   color-scheme: light dark;
   --surface: #fcfcfb; --panel: #f2f1ef; --ink: #0b0b0b; --ink2: #52514e;
   --grid: #e8e8e6; --blue: #2a78d6; --blue-soft: #cfe0f5; --warn: #eda100;
+  --v-dark: #7a7975; --v-water: #2a78d6; --v-z: #4a3aa7; --v-layout: #eb6834;
+  --v-thick: #1baf7a; --v-std: #eda100; --v-cal: #e87ba4; --v-floor: #008300;
 }
 @media (prefers-color-scheme: dark) { :root {
   --surface: #1a1a19; --panel: #242423; --ink: #ffffff; --ink2: #c3c2b7;
   --grid: #3a3a38; --blue: #3987e5; --blue-soft: #24466e;
+  --v-dark: #8a8985; --v-water: #3987e5; --v-z: #9085e9; --v-layout: #d95926;
+  --v-thick: #199e70; --v-std: #c98500; --v-cal: #d55181; --v-floor: #008300;
 }}
 * { box-sizing: border-box; margin: 0; }
 body { background: var(--surface); color: var(--ink);
@@ -46,6 +50,13 @@ select:disabled { opacity: .55; }
 .band .cv { position: absolute; top: 6px; height: 14px; background: var(--blue); border-radius: 4px; opacity: .55; }
 .band .pt { position: absolute; top: 2px; width: 3px; height: 22px; background: var(--ink); border-radius: 2px; }
 .axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink2); }
+.vlab { font-size: .72rem; color: var(--ink2); margin-top: 1rem; text-transform: uppercase; letter-spacing: .05em; }
+.vbar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin-top: .35rem; }
+.vbar div { height: 100%; border-right: 2px solid var(--surface); }
+.vbar div:last-child { border-right: none; }
+.vleg { display: flex; flex-wrap: wrap; gap: .25rem .9rem; font-size: .72rem; color: var(--ink2); margin-top: .45rem; }
+.vleg span { display: inline-flex; align-items: center; gap: .35rem; }
+.vleg i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
 .note { margin-top: 1.4rem; font-size: .78rem; color: var(--ink2); border-top: 1px solid var(--grid); padding-top: .8rem; }
 .note p { margin-bottom: .45rem; }
 .note b { color: var(--ink); }
@@ -78,6 +89,9 @@ select:disabled { opacity: .55; }
   <div class="pis">90% interval, cross-study (honest for a new material): <b id="px"></b><br>
   90% interval, within-corpus: <b id="pc"></b><br>
   <span id="bnote" class="hint"></span></div>
+  <div class="vlab">What makes it this wide — share of variance (measured budget)</div>
+  <div class="vbar" id="vbar"></div>
+  <div class="vleg" id="vleg"></div>
 </div>
 <div class="note">
   <p><b>Where the width comes from — and what to contribute.</b> The interval is
@@ -163,6 +177,19 @@ const AX = {"fam":["PLA","PETG","ABS","ASA","PC","PC-ABS","PA","TPU"],"inf":[10,
 const B = [[0.0, 35.0, 1.8532, 2.4037], [35.0, 55.0, 1.3515, 1.7654], [55.0, 85.0, 1.3515, 1.7654], [85.0, 100.5, 1.3515, 1.7654]];   // [lo, hi, exp(q_cv), exp(q_cross)] per infill bucket
 const FF = {"PLA": [1.0, 1.0, 1.0], "PETG": [1.0, 1.0, 1.0], "ABS": [1.0, 0.675, 0.4172], "ASA": [1.0, 0.675, 0.4172], "PC": [1.0, 0.675, 0.4172], "PC-ABS": [1.0, 0.675, 0.4172], "PA": [1.0, 0.675, 0.4172], "TPU": [1.0, 1.0, 1.0]};    // exact per-family fan factors (model-derived)
 const SF = [1.0051, 1.0, 0.9898, 0.9764];    // exact speed factors (model-derived)
+// Uncertainty budget (sigma as % of strength, measured/lit-bounded; see the
+// variance section below). Shares shown are sigma^2 fractions — areas add
+// honestly. Trans-layer term joins only for upright builds.
+const VSRC = [
+  ["dark (batch, additives, lab)", 25.5, "--v-dark", false],
+  ["water state", 14, "--v-water", false],
+  ["trans-layer (Z)", 11.2, "--v-z", true],
+  ["plate layout / interlayer time", 10, "--v-layout", false],
+  ["specimen thickness", 8, "--v-thick", false],
+  ["test standard", 7, "--v-std", false],
+  ["temp + speed calibration", 7.1, "--v-cal", false],
+  ["replicate floor", 4.5, "--v-floor", false],
+];
 const $ = id => document.getElementById(id);
 const ids = ["fam","inf","lay","ras","ori","dt","wal","flo"];
 const dims = [AX.fam, AX.inf, AX.lay, AX.ras, AX.ori, AX.dt, AX.wal, AX.flo];
@@ -183,6 +210,13 @@ function upd() {
   $("bnote").textContent = inf < 35
     ? "sparse infill: interval widened — low-% parts measurably scatter more (fewer, thinner load paths)"
     : "";
+  const upright = $("ori").value === "upright";
+  const act = VSRC.filter(v => !v[3] || upright);
+  const tot = act.reduce((a, v) => a + v[1] * v[1], 0);
+  $("vbar").innerHTML = act.map(v =>
+    `<div style="width:${(100 * v[1] * v[1] / tot).toFixed(1)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}% → ${(100 * v[1] * v[1] / tot).toFixed(0)}% of variance"></div>`).join("");
+  $("vleg").innerHTML = act.map(v =>
+    `<span><i style="background:var(${v[2]})"></i>${v[0]} ${(100 * v[1] * v[1] / tot).toFixed(0)}%</span>`).join("");
   const max = Math.max(80, Math.ceil(xhi / 10) * 10);
   $("ax1").textContent = max + " MPa";
   const pct = v => (100 * v / max) + "%";
