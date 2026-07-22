@@ -55,9 +55,9 @@ select:disabled { opacity: .55; }
 .band .pt { position: absolute; top: 2px; width: 3px; height: 22px; background: var(--ink); border-radius: 2px; }
 .axis { display: flex; justify-content: space-between; font-size: .72rem; color: var(--ink2); }
 .vlab { font-size: .72rem; color: var(--ink2); margin-top: 1rem; text-transform: uppercase; letter-spacing: .05em; }
-.vbar { position: relative; height: 12px; margin: 2px 0 2px; }
-.vbar div { position: absolute; top: 1px; height: 10px; border-radius: 2px;
-  box-shadow: inset -2px 0 0 var(--surface); }
+.vbar { position: relative; height: 10px; margin: -6px 0 4px; }
+.vbar div { position: absolute; top: 0; height: 10px; border-radius: 2px;
+  box-shadow: inset -1px 0 0 var(--surface); }
 .vleg { display: flex; flex-wrap: wrap; gap: .25rem .9rem; font-size: .72rem; color: var(--ink2); margin-top: .45rem; }
 .vleg span { display: inline-flex; align-items: center; gap: .35rem; }
 .vleg i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
@@ -274,7 +274,7 @@ function upd() {
     const water = "water state", grey = act[0];
     const pctv = v => 100 * v / max;
     const seg = (x0, w, v) =>
-      `<div style="left:${pctv(x0).toFixed(2)}%;width:${Math.max(pctv(w), .6).toFixed(2)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}%"></div>`;
+      `<div style="left:${pctv(x0).toFixed(3)}%;width:${pctv(w).toFixed(3)}%;background:var(${v[2]})" title="${v[0]} — σ≈${v[1]}%"></div>`;
     const lowOrder = [grey, ...act.filter(v => v[0] === water),
                       ...act.slice(1).filter(v => v[0] !== water)];
     const lowTot = lowOrder.reduce((a, v) => a + v[1] * v[1], 0);
