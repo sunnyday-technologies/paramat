@@ -43,3 +43,30 @@ get — and the rules are stricter than for print settings:
 
 Accepted results feed the public consensus database (CC BY 4.0, you're credited via the source
 link) and the property-prediction validation set.
+
+## Most-wanted experiments (ranked by variance destroyed)
+
+Our published uncertainty budget says the prediction interval is dominated by what studies
+*don't report*. If you're planning a reviewed DoE (or a careful home experiment with stated
+methods), these are the gaps — each one directly narrows the public predictor's error bars:
+
+1. **Dry-vs-wet printed coupons** — one PLA + one PA, dried / week-ambient / saturated,
+   ≥3 replicates (~12 coupons). Filament water state is the single biggest unreported term
+   (~14% of strength). Neat-filament sensitivity is measured; *printed-part* deltas are not.
+2. **Part-cooling fan sweep** — one hot-bonding family (ABS/ASA/PC), fan 0/50/100%,
+   everything else fixed, ≥3 reps (~9 coupons). Today's fan term comes from a single study
+   where fan, nozzle and bed temperature moved together — it urgently needs independent
+   replication. Cheapest high-value experiment on this list.
+3. **Solo-vs-batch plate layout** — the same coupon printed alone, ×4, and ×9 per plate,
+   3 reps (~9 coupons). Interlayer time / thermal history, ~10%; essentially unpublished.
+4. **Z-orientation series beyond PLA/ABS** — upright coupons, ≥3 reps (PETG, ASA, PC, PA…).
+   Z retention is the most safety-relevant number and our data covers two families.
+5. **Specimen geometry cross-test** — one material across ISO 527-1B vs ASTM D638-I and two
+   thicknesses (~12 coupons). Standards disagree by 13–20% on the same material.
+6. **Infill pattern at stated density** — gyroid vs grid vs rectilinear *with the density
+   printed in the paper*. No open study states both; until one does, pattern stays unmodeled.
+
+**Golden fields** (report these and your data enters the model at replicate-floor accuracy):
+infill % *and* pattern · wall count · flow/extrusion multiplier · measured part density ·
+filament moisture/drying state · fan % · nozzle & bed temps (set *and* measured if you can) ·
+print speed · specimen standard & orientation · printer model · n per condition with SD.
