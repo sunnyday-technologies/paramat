@@ -21,3 +21,8 @@ you apply; Sunnyday Technologies is not liable for failed prints or equipment da
 
 Tool © Sunnyday Technologies. Barcode scanning via html5-qrcode (Apache-2.0); OCR via Tesseract.js
 (Apache-2.0), both loaded from CDN and run on-device (no images leave your browser).
+
+## Enhanced read (testing)
+
+- **PP-OCRv4 detection & recognition models** — [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) (Baidu), Apache License 2.0. Served from this site; run entirely on-device.
+- **ONNX Runtime Web** — Microsoft, MIT license (loaded from jsDelivr on demand).
