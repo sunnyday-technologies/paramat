@@ -375,12 +375,19 @@
   const q=document.getElementById("q"),drop=document.getElementById("drop"),card=document.getElementById("card");
   const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   const toast=t=>{const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800)};
+  // Not-found → submission row. No uploads, no accounts: photos travel by email (private
+  // inbox) or GitHub issue (their account gate) — nothing user-sent is ever published
+  // without human review into curated.csv.
+  const submitRow=t=>{const s=encodeURIComponent(String(t||"").trim());
+    const m=`mailto:paramat3d@sunn3d.com?subject=${encodeURIComponent("Add filament: ")}${s}&body=${encodeURIComponent("Please attach a photo of the spool label (front + printed settings panel, barcode if visible). Reviewed submissions are added with you credited as the source.")}`;
+    const g=`https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Add filament: ")}${s}`;
+    return `<div class="opt" style="cursor:default;display:block;white-space:normal"><span style="color:var(--ink3)">Not listed? Submit it for addition — </span><a href="${m}" style="color:var(--cool)">email the label photo</a><span style="color:var(--ink3)"> or </span><a href="${g}" target="_blank" rel="noopener" style="color:var(--cool)">open a request</a><span style="color:var(--ink3)">. Reviewed, then added.</span></div>`};
   let shown=[],hl=-1;
   function search(t){t=t.trim().toLowerCase();if(!t){drop.classList.remove("on");return}
     const tk=t.split(/\s+/),r=[];for(const m of DATA){if(tk.every(k=>m._k.includes(k))){r.push(m);if(r.length>=40)break}}
     const fuzzy=!r.length;if(fuzzy)r.push(...fuzzyMatch(t,15));   // forgiving fallback: partial/word-order matches
     shown=r;hl=-1;drop.innerHTML=(fuzzy&&r.length?`<div class="opt" style="color:var(--ink3);cursor:default">No exact match — closest:</div>`:"")
-      +(r.length?r.map((m,j)=>`<div class="opt" role="option" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join(""):`<div class="opt" style="color:var(--ink3)">No match — try just the brand.</div>`);drop.classList.add("on");q.setAttribute("aria-expanded","true")}
+      +(r.length?r.map((m,j)=>`<div class="opt" role="option" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join("")+(fuzzy?submitRow(t):""):`<div class="opt" style="color:var(--ink3);cursor:default">No match — try just the brand.</div>`+submitRow(t));drop.classList.add("on");q.setAttribute("aria-expanded","true")}
   q.addEventListener("input",()=>search(q.value));
   q.addEventListener("keydown",e=>{
     if(e.key==="Enter"){e.preventDefault();
@@ -521,7 +528,7 @@
     shown=list;hl=-1;
     drop.innerHTML=list.length
       ? list.map((m,j)=>`<div class="opt" data-j="${j}"><b>${esc(m.brand)}</b> ${esc(m.product)}<span class="fam">${esc(m.family||"?")}</span></div>`).join("")
-      : `<div class="opt" style="color:var(--ink3)">${esc(msg||"No match")}</div>`;
+      : `<div class="opt" style="color:var(--ink3);cursor:default">${esc(msg||"No match")}</div>`+submitRow(q.value);
     drop.classList.add("on");
   }
   // Normalize common OCR confusions BEFORE parsing: ℃ ligature, letter-O for
