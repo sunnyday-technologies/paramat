@@ -216,7 +216,7 @@
   <!-- camera boxes sit ABOVE the buttons: when a camera is open, its
        controls (capture / stop) are directly below the view, not above it -->
   <div id="scanbox"><button class="camclose" id="scanclose">✕ Close</button><div class="scanlive"><span class="pulse"></span>Scanning — no button needed</div><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode or QR…</div></div>
-  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;min-height:54px">📸 Capture &amp; read label</button></div><div class="hint">Label reading is beta — less accurate than the barcode scan. Fill the frame with the printed label, in good light.</div><div class="hint" id="ocrmsg" role="status"></div></div>
+  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;min-height:54px">📸 Capture &amp; read label</button><button class="btn" id="ocrenh" style="flex:1;min-height:54px">✨ Enhanced read (testing)</button></div><div class="hint">Label reading is beta — less accurate than the barcode scan. Fill the frame with the printed label, in good light. <b>Enhanced read</b> downloads a stronger on-device reading model once (≈16&nbsp;MB, cached) — your photo never leaves this device.</div><div class="hint" id="ocrmsg" role="status"></div></div>
   <div class="actions">
     <button class="btn" id="scanbtn">📷 Scan barcode</button>
     <button class="btn" id="ocrbtn">🔤 Read label (beta)</button>
@@ -542,6 +542,43 @@
       if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
       else showCandidates([],"Couldn't read this label confidently — try the barcode scan, search by name, or submit a label photo below.");
     }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
+  };
+  // ✨ Enhanced read (testing): PP-OCRv4 on-device via ONNX Runtime Web. Models
+  // download TO the phone (once, cached); the photo never leaves the device.
+  let enhP=null;
+  function loadEnh(){if(window.enhancedOcr)return Promise.resolve();if(enhP)return enhP;
+    enhP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="enhanced-ocr.js";
+      s.onload=res;s.onerror=()=>{enhP=null;rej(new Error("script load failed"))};document.head.appendChild(s)});
+    return enhP}
+  document.getElementById("ocrenh").onclick=async()=>{
+    if(!ocrStream)return;
+    ocrmsg.textContent="Starting enhanced read…";
+    try{
+      const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
+      cv.getContext("2d").drawImage(ocrcam,0,0);
+      const qrText=await qrFromCanvas(cv);
+      await loadEnh();
+      let best=null;
+      for(const deg of [0,90]){
+        const text=await window.enhancedOcr(rotCanvas(cv,deg),m=>ocrmsg.textContent=m+(deg?" (rotated)":""));
+        const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
+        const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
+        if(!best||score>best.score)best={parsed,cands,score};
+        if(parsed.noz)break;
+      }
+      if(qrText){
+        const digits=qrText.replace(/\D/g,"");
+        if(/^\d{6,14}$/.test(digits)){
+          for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
+            if(GTIN[c]!=null){stopOcr();toast("Matched via QR");telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);return}}
+        }
+        const qc=fuzzyMatch(qrText,8);
+        if(qc.length)best.cands=[...new Map([...qc,...(best.cands||[])].map(m=>[m._i,m])).values()].slice(0,8);
+      }
+      stopOcr();
+      if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label (enhanced)");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else showCandidates([],"Couldn't read this label confidently — try the barcode scan, search by name, or submit a label photo below.");
+    }catch(e){ocrmsg.textContent="Enhanced read unavailable ("+e.message+") — the standard read still works.";}
   };
   function fuzzyMatch(text,limit){
     const words=[...new Set(String(text).toLowerCase().replace(/[^a-z0-9+]+/g," ").split(/\s+/).filter(w=>w.length>1))];

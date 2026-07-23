@@ -105,6 +105,10 @@
       receive or store it.</li>
     <li>The scanner and OCR libraries load from CDNs (unpkg, jsDelivr) only when you use those
       features; those requests are subject to the CDNs' policies.</li>
+    <li><b>Enhanced read (testing)</b> downloads open OCR models (PP-OCRv4, PaddleOCR project,
+      Apache-2.0) to your device on first use (≈16&nbsp;MB, cached by your browser) plus the
+      ONNX Runtime Web engine from jsDelivr. All recognition runs on your device — the photo
+      never leaves it.</li>
   </ul>
   <h3>Contact</h3>
   <p>Questions or corrections: <a href="https://github.com/sunnyday-technologies/paramat/issues">GitHub issues</a>
