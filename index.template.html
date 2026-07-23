@@ -546,7 +546,7 @@
   // (typo-tolerant, generic words excluded); without an anchor require strong
   // multi-token evidence; below threshold we say so honestly instead of guessing.
   // Validated on a 1,300-photo internet corpus: wrong-brand shows 90% → ~4%.
-  const OCR_STOP=new Set(["made","for","the","one","filament","filaments","material","materials","real","layer","press","smart","best","tech","labs","lab","pro","plus","print","prints","printing","design","color","colors","world","american","atomic","polar","precision","value","quality","premium","basics","group","form","maker","makers","basic","smile","push","happy","love","with","from","your","this","that","have","forward","plastic","patron"]);
+  const OCR_STOP=new Set(["made","for","the","one","filament","filaments","material","materials","real","layer","press","smart","best","tech","labs","lab","pro","plus","print","prints","printing","design","color","colors","world","american","atomic","polar","precision","value","quality","premium","basics","group","form","maker","makers","basic","smile","push","happy","love","with","from","your","this","that","have","forward","plastic","patron","beta","professional","products","solutions","elas"]);
   const BRAND_TOKENS=new Map();
   for(const b of new Set(DATA.map(m=>m.brand).filter(Boolean)))
     for(const tok of b.toLowerCase().split(/[^a-z0-9+]+/).filter(w=>w.length>=4&&!OCR_STOP.has(w))){
