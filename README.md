@@ -9,3 +9,7 @@ OpenPrintTag / OpenSpool for a reusable NFC tag.
 
 Conditions are a statistical cross-source consensus of open data. Not measured
 optima; single-source materials are flagged. See NOTICE for data attribution.
+
+## License
+
+Code: [MIT](LICENSE) · Data: [CC BY 4.0](DATA_LICENSE.md) · Upstream attribution: [NOTICE.md](NOTICE.md)
