@@ -2,9 +2,9 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Predicted tensile strength for FDM/FFF 3D prints by material, infill, walls, layer height, temperature and orientation — with honest 90% uncertainty intervals.">
-<meta property="og:title" content="ParaMat3D — printed-part strength predictor (beta)">
+<meta property="og:title" content="ParaMat3D-Poly — printed-part strength predictor (beta)">
 <link rel="icon" href="data:,">
-<title>ParaMat3D strength predictor (beta)</title>
+<title>ParaMat3D-Poly strength predictor (beta)</title>
 <style>
 :root {
   color-scheme: light dark;
@@ -65,7 +65,7 @@ select:disabled { opacity: .55; }
 .note p { margin-bottom: .45rem; }
 .note b { color: var(--ink); }
 </style></head><body><div class="wrap">
-<h1>Strength predictor <span class="badge">BETA — estimates, not tests</span></h1>
+<h1>ParaMat3D-Poly strength predictor <span class="badge">BETA — estimates, not tests</span></h1>
 <div class="sub">Predicted tensile strength with honest uncertainty — physics + 150 published coupons · CV MAE 4.9 MPa · R² 0.72 · <a href='/'>paramat3d.com</a></div>
 <div class="controls">
   <div><label>Family</label><select id="fam"><option value="PLA" selected>PLA</option><option value="PETG">PETG</option><option value="ABS">ABS</option><option value="ASA">ASA</option><option value="PC">PC</option><option value="PC-ABS">PC-ABS</option><option value="PA">PA</option><option value="TPU">TPU</option></select></div>
