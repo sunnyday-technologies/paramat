@@ -18,6 +18,9 @@ rebuild.
 4. No values copied from other databases or from AGPL slicer profiles — labels and
    manufacturer pages only.
 
+No GitHub account? Email the same information (label photo, values, source) to
+**paramat3d@sunn3d.com** — we'll enter it with you credited as the source.
+
 Prefer not to edit CSV? [Open an issue](../../issues/new) with a photo of the label and
 we'll take it from there.
 
