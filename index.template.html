@@ -216,10 +216,10 @@
   <!-- camera boxes sit ABOVE the buttons: when a camera is open, its
        controls (capture / stop) are directly below the view, not above it -->
   <div id="scanbox"><button class="camclose" id="scanclose">✕ Close</button><div class="scanlive"><span class="pulse"></span>Scanning — no button needed</div><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode or QR…</div></div>
-  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;min-height:54px">📸 Capture &amp; read label</button></div><div class="hint" id="ocrmsg" role="status"></div></div>
+  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;min-height:54px">📸 Capture &amp; read label</button></div><div class="hint">Label reading is beta — less accurate than the barcode scan. Fill the frame with the printed label, in good light.</div><div class="hint" id="ocrmsg" role="status"></div></div>
   <div class="actions">
     <button class="btn" id="scanbtn">📷 Scan barcode</button>
-    <button class="btn" id="ocrbtn">🔤 Read label</button>
+    <button class="btn" id="ocrbtn">🔤 Read label (beta)</button>
     <button class="btn" id="shelfbtn">🗄 My filaments (<span id="shelfcount">0</span>)</button>
     <button class="btn" id="addbtn">＋ Add manually</button>
   </div>
@@ -464,7 +464,7 @@
     ocrmsg.textContent="Fill the frame with the brand/material text, then Capture.";
     loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
   };
-  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");document.getElementById("ocrbtn").textContent="🔤 Read label";}
+  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");document.getElementById("ocrbtn").textContent="🔤 Read label (beta)";}
   // Labels are often sideways on the spool — retry OCR at 90°/270°/180° until a
   // rotation yields temps or a database match.
   function rotCanvas(cv,deg){if(!deg)return cv;const c=document.createElement("canvas");
@@ -488,21 +488,39 @@
   document.getElementById("ocrcap").onclick=async()=>{
     if(!ocrStream)return;
     ocrmsg.textContent="Reading…";
-    try{await loadTess();
+    try{
       const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
       cv.getContext("2d").drawImage(ocrcam,0,0);
       const qrText=await qrFromCanvas(cv);            // free identity, if present
-      // Try ALL rotations and keep the BEST read — stopping at the first weak
-      // hit made sideways labels return names without their printed temps.
       let best=null,firstText="";
-      for(const deg of [0,90,270,180]){
-        if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
-        const {data:{text}}=await Tesseract.recognize(rotCanvas(cv,deg),"eng");
-        if(!deg)firstText=text;
-        const parsed=parseLabel(text),cands=fuzzyMatch(fixOcr(text),8);
-        const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
-        if(!best||score>best.score)best={parsed,cands,score};
-        if(parsed.noz)break;                          // printed temps found — done
+      // Native TextDetector first (Chrome/Android on-device ML — far stronger on
+      // scene text, zero download). Tesseract.js is the backup engine.
+      if("TextDetector" in window){
+        try{const td=new TextDetector();
+          for(const deg of [0,90]){
+            const blocks=await td.detect(rotCanvas(cv,deg));
+            const text=(blocks||[]).map(b=>b.rawValue||"").join("\n");
+            if(!deg)firstText=text;
+            const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8);
+            const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
+            if(!best||score>best.score)best={parsed,cands,score};
+            if(parsed.noz)break;
+          }
+        }catch(e){}
+      }
+      if(!best||!(best.parsed.noz||best.cands.length)){
+        await loadTess();
+        // Try ALL rotations and keep the BEST read — stopping at the first weak
+        // hit made sideways labels return names without their printed temps.
+        for(const deg of [0,90,270,180]){
+          if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
+          const {data:{text}}=await Tesseract.recognize(rotCanvas(cv,deg),"eng");
+          if(!firstText)firstText=text;
+          const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8);
+          const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
+          if(!best||score>best.score)best={parsed,cands,score};
+          if(parsed.noz)break;                          // printed temps found — done
+        }
       }
       if(qrText){
         const digits=qrText.replace(/\D/g,"");
@@ -515,7 +533,7 @@
       }
       stopOcr();
       if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
-      else showCandidates([],"Couldn't read \""+firstText.trim().slice(0,36).replace(/\n/g," ")+"\" — try again with better light, or search.");
+      else showCandidates([],"Couldn't read this label confidently — try the barcode scan, search by name, or submit a label photo below.");
     }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
   };
   function fuzzyMatch(text,limit){
@@ -523,6 +541,33 @@
     if(!words.length)return[];
     return DATA.map(m=>{let s=0;for(const w of words){if(m._k.includes(w))s+=(w.length>=4?3:w.length>=3?2:1);}return{m,s};})
       .filter(x=>x.s>=2).sort((a,b)=>b.s-a.s).slice(0,limit||8).map(x=>x.m);
+  }
+  // OCR text is noisy — gate what we assert: anchor on DISTINCTIVE brand tokens
+  // (typo-tolerant, generic words excluded); without an anchor require strong
+  // multi-token evidence; below threshold we say so honestly instead of guessing.
+  // Validated on a 1,300-photo internet corpus: wrong-brand shows 90% → ~4%.
+  const OCR_STOP=new Set(["made","for","the","one","filament","filaments","material","materials","real","layer","press","smart","best","tech","labs","lab","pro","plus","print","prints","printing","design","color","colors","world","american","atomic","polar","precision","value","quality","premium","basics","group","form","maker","makers"]);
+  const BRAND_TOKENS=new Map();
+  for(const b of new Set(DATA.map(m=>m.brand).filter(Boolean)))
+    for(const tok of b.toLowerCase().split(/[^a-z0-9+]+/).filter(w=>w.length>=4&&!OCR_STOP.has(w))){
+      if(!BRAND_TOKENS.has(tok))BRAND_TOKENS.set(tok,new Set());BRAND_TOKENS.get(tok).add(b);}
+  for(const [tok,bs] of [...BRAND_TOKENS])if(bs.size>2)BRAND_TOKENS.delete(tok);
+  function ed1(a,b){if(Math.abs(a.length-b.length)>1)return false;if(a===b)return true;
+    let i=0,j=0,e=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}
+    if(++e>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}
+    return e+(a.length-i)+(b.length-j)<=1}
+  function matchFromOcr(text,limit){
+    const words=[...new Set(String(text).toLowerCase().replace(/[^a-z0-9+]+/g," ").split(/\s+/).filter(w=>w.length>1))];
+    if(!words.length)return[];
+    const anchored=new Set();
+    for(const w of words){if(w.length<4)continue;
+      if(BRAND_TOKENS.has(w)){for(const b of BRAND_TOKENS.get(w))anchored.add(b)}
+      else if(w.length>=5)for(const [tok,bs] of BRAND_TOKENS)if(ed1(w,tok))for(const b of bs)anchored.add(b);}
+    const pool=anchored.size?DATA.filter(m=>anchored.has(m.brand)):DATA;
+    const scored=pool.map(m=>{let s=0,strong=0;for(const w of words)if(m._k.includes(w)){s+=(w.length>=4?3:w.length>=3?2:1);if(w.length>=4)strong++}return{m,s,strong}})
+      .sort((a,b)=>b.s-a.s);
+    if(anchored.size)return scored.filter(x=>x.s>=2).slice(0,limit||8).map(x=>x.m);
+    return scored.filter(x=>x.strong>=2&&x.s>=6).slice(0,limit||8).map(x=>x.m);
   }
   function showCandidates(list,msg){
     shown=list;hl=-1;
@@ -541,7 +586,8 @@
   // for "210 °C") are dropped rather than shown as garbage.
   function parseLabel(text){
     const t=fixOcr(text).replace(/\s+/g," ");
-    const fam=(t.match(/\b(PLA\+?|PETG|PET-?G|ABS|ASA|TPU|TPE|PVA|PVB|PPS(?:-?GF\d*|-?CF)?|PC|PA-?CF|PA\d*|PP|PEEK|PEKK|PCTG|HIPS|PSU|PPSU)\b/i)||[])[1]||null;
+    const fam=(t.match(/\b(PLA\+?|PETG|PET-?G|ABS|ASA|TPU|TPE|PVA|PVB|PPS(?:-?GF\d*|-?CF)?|PA-?CF|PEEK|PEKK|PCTG|HIPS|PSU|PPSU)\b/i)||[])[1]
+      ||(t.match(/\b(PC|PA\d*|PP)\b/)||[])[1]||null;   // 2-letter codes: case-sensitive (OCR garbage prints lowercase)
     const rng=re=>{const m=t.match(re);return m?(m[2]?[+m[1],+m[2]]:[+m[1],+m[1]]):null;};
     let noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend|extruder)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
     let bed=rng(/(?:heat\s*bed|heatbed|\bbed\b|platform)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
