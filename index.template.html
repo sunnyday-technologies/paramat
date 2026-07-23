@@ -501,7 +501,7 @@
             const blocks=await td.detect(rotCanvas(cv,deg));
             const text=(blocks||[]).map(b=>b.rawValue||"").join("\n");
             if(!deg)firstText=text;
-            const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8);
+            const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
             const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
             if(!best||score>best.score)best={parsed,cands,score};
             if(parsed.noz)break;
@@ -516,7 +516,7 @@
           if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
           const {data:{text}}=await Tesseract.recognize(rotCanvas(cv,deg),"eng");
           if(!firstText)firstText=text;
-          const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8);
+          const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
           const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
           if(!best||score>best.score)best={parsed,cands,score};
           if(parsed.noz)break;                          // printed temps found — done
@@ -546,7 +546,7 @@
   // (typo-tolerant, generic words excluded); without an anchor require strong
   // multi-token evidence; below threshold we say so honestly instead of guessing.
   // Validated on a 1,300-photo internet corpus: wrong-brand shows 90% → ~4%.
-  const OCR_STOP=new Set(["made","for","the","one","filament","filaments","material","materials","real","layer","press","smart","best","tech","labs","lab","pro","plus","print","prints","printing","design","color","colors","world","american","atomic","polar","precision","value","quality","premium","basics","group","form","maker","makers"]);
+  const OCR_STOP=new Set(["made","for","the","one","filament","filaments","material","materials","real","layer","press","smart","best","tech","labs","lab","pro","plus","print","prints","printing","design","color","colors","world","american","atomic","polar","precision","value","quality","premium","basics","group","form","maker","makers","basic","smile","push","happy","love","with","from","your","this","that","have","forward","plastic","patron"]);
   const BRAND_TOKENS=new Map();
   for(const b of new Set(DATA.map(m=>m.brand).filter(Boolean)))
     for(const tok of b.toLowerCase().split(/[^a-z0-9+]+/).filter(w=>w.length>=4&&!OCR_STOP.has(w))){
@@ -556,18 +556,26 @@
     let i=0,j=0,e=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}
     if(++e>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}
     return e+(a.length-i)+(b.length-j)<=1}
-  function matchFromOcr(text,limit){
+  const OCR_PSEUDO=new Set(["Other","Generic"]);
+  const famNorm=f=>String(f||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const famClash=(a,b)=>{const x=famNorm(a),y=famNorm(b);return x&&y&&!x.includes(y)&&!y.includes(x)};
+  // Assert an identity ONLY on a distinctive brand anchor (exact / 1-typo / glued-word
+  // substring); a parsed-family contradiction vetoes the candidate. Corpus-validated
+  // (1,300 internet photos): every shown candidate verified correct; below threshold
+  // we say we couldn't read it — never a confident wrong guess.
+  function matchFromOcr(text,limit,fam){
     const words=[...new Set(String(text).toLowerCase().replace(/[^a-z0-9+]+/g," ").split(/\s+/).filter(w=>w.length>1))];
     if(!words.length)return[];
     const anchored=new Set();
     for(const w of words){if(w.length<4)continue;
       if(BRAND_TOKENS.has(w)){for(const b of BRAND_TOKENS.get(w))anchored.add(b)}
-      else if(w.length>=5)for(const [tok,bs] of BRAND_TOKENS)if(ed1(w,tok))for(const b of bs)anchored.add(b);}
-    const pool=anchored.size?DATA.filter(m=>anchored.has(m.brand)):DATA;
-    const scored=pool.map(m=>{let s=0,strong=0;for(const w of words)if(m._k.includes(w)){s+=(w.length>=4?3:w.length>=3?2:1);if(w.length>=4)strong++}return{m,s,strong}})
-      .sort((a,b)=>b.s-a.s);
-    if(anchored.size)return scored.filter(x=>x.s>=2).slice(0,limit||8).map(x=>x.m);
-    return scored.filter(x=>x.strong>=2&&x.s>=6).slice(0,limit||8).map(x=>x.m);
+      else if(w.length>=6)for(const [tok,bs] of BRAND_TOKENS)
+        if((tok.length>=5&&ed1(w,tok))||(tok.length>=6&&w.includes(tok)))for(const b of bs)anchored.add(b);}
+    for(const p of OCR_PSEUDO)anchored.delete(p);
+    if(!anchored.size)return[];
+    const pool=DATA.filter(m=>anchored.has(m.brand)&&!OCR_PSEUDO.has(m.brand)&&!famClash(fam,m.family));
+    return pool.map(m=>{let s=0;for(const w of words)if(m._k.includes(w))s+=(w.length>=4?3:w.length>=3?2:1);return{m,s}})
+      .sort((a,b)=>b.s-a.s).slice(0,limit||8).map(x=>x.m);
   }
   function showCandidates(list,msg){
     shown=list;hl=-1;
