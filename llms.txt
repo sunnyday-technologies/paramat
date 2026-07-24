@@ -49,3 +49,27 @@ Connect any MCP client via Streamable HTTP (stateless, no auth):
 - Tool (interactive): https://paramat3d.com/
 - Terms & privacy: https://paramat3d.com/legal.html
 - Source & issues: https://github.com/sunnyday-technologies/paramat
+
+## Direct integration for slicers and agents
+
+- Integration guide: https://paramat3d.com/agents
+- MCP endpoint: https://mcp.paramat3d.com
+- MCP tools: search_materials, get_print_settings, identify_by_gtin, prepare_data_issue, get_manufacturer_submission_spec
+- JSON search: https://mcp.paramat3d.com/v1/search?q=bambu%20pla%20basic
+- JSON settings: https://mcp.paramat3d.com/v1/settings?brand=Bambu%20Lab&product=PLA%20Basic
+- JSON barcode: https://mcp.paramat3d.com/v1/gtin?barcode=YOUR_BARCODE
+- MCP discovery manifest: https://paramat3d.com/server.json
+- Data issue email: paramat3d@sunn3d.com
+
+prepare_data_issue returns a reviewable email draft; it does not send or store email.
+
+## Manufacturer profiles
+
+- Program: https://paramat3d.com/manufacturers
+- Schema: https://paramat3d.com/manufacturer-profile.schema.json
+- Example: https://paramat3d.com/manufacturer-profile.example.json
+- MCP tools: get_manufacturer_submission_spec, validate_manufacturer_profile
+- Non-retaining validation API: POST https://mcp.paramat3d.com/v1/manufacturer/validate
+- Submission/corrections: paramat3d@sunn3d.com
+
+Manufacturer verification is distinct from cross-source consensus. Printer agents must perform identity and hardware checks and require operator confirmation.

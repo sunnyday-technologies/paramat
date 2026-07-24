@@ -179,7 +179,7 @@
     <nav class="bb-nav" aria-label="Site">
       <a href="predict.html">Predict <sup>β</sup></a>
       <a href="stats.html">Stats</a>
-      <a href="llms.txt">API</a>
+      <a href="agents.html">Agents/API</a>
       <a href="https://github.com/sunnyday-technologies/paramat" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </div>
@@ -237,24 +237,25 @@
     <h4>Method</h4>
     <p>Conditions = cross-source consensus of open slicer + manufacturer data (OFD·MIT, Orca/Prusa/Bambu·AGPL, Cura·CC0). Temperature is a range — <b>strength picks the max</b> (higher nozzle temp → stronger layer bond; ~+20 °C headroom above optimal before quality fails, per 948k CAXTON frames). Not measured optima; single-source materials are flagged, and cross-confirmed ones show their source spread.</p>
     <h4>Open RFID ecosystem — tags &amp; readers</h4>
-    <p>ParaMat3D writes <b>open, unencrypted</b> spool tags straight from this page via the
-      browser's Web NFC ("Write to NFC tag" on any material; <b>Chrome on Android</b> — no app
-      needed). On other devices, download the record and write it with your own tool. No
-      proprietary chips, ever. Use any <b>NTAG215 or NTAG216</b> NFC sticker
-      (504/888&nbsp;bytes; the smaller NTAG213 can be too tight for some records). To read tags
-      at the printer, the community projects below
-      pair an <b>ESP32 + PN532</b> reader (~$10 in parts) or their own boards:
+    <p>ParaMat3D's current browser writer creates an <b>OpenSpool 1.0 JSON</b> NDEF record via
+      Web NFC ("Write OpenSpool NFC" on any material; <b>Chrome on Android</b> — no app needed).
+      Use a writable <b>NTAG215 or NTAG216</b> NFC Forum Type 2 tag, as specified by OpenSpool.
+      The writer does <b>not</b> currently create OpenTag3D or OpenPrintTag records. Those are
+      separate encodings and hardware profiles. To read OpenSpool tags at the printer, the
+      community project below pairs an <b>ESP32 + PN532</b> reader with its bridge:
       <a href="https://github.com/spuder/OpenSpool" target="_blank" rel="noopener">OpenSpool</a> (drives a
       Bambu AMS via its bridge) ·
-      <a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a> (the open
-      tag standard we export, MIT) ·
-      <a href="https://opentag3d.info" target="_blank" rel="noopener">OpenTag3D</a> (open NDEF spool-tag
-      spec; NDEF-compatible, so both records fit on one physical tag) ·
+      <a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a>
+      (NFC-V/ISO 15693, CBOR in an <code>application/vnd.openprinttag</code> NDEF record; designed
+      around ICODE SLIX2) ·
+      <a href="https://opentag3d.info/spec.html" target="_blank" rel="noopener">OpenTag3D</a>
+      (its own binary memory map in an <code>application/opentag3d</code> NDEF record; supports
+      NTAG213/215/216 and SLIX2) ·
       <a href="https://github.com/Donkie/Spoolman" target="_blank" rel="noopener">Spoolman</a> (inventory
       server many readers integrate with) ·
       <a href="https://github.com/Bambu-Research-Group/RFID-Tag-Guide" target="_blank" rel="noopener">Bambu
-      RFID research</a> (documents the proprietary tags). We don't sell or endorse specific hardware —
-      any standards-compliant tag works.</p>
+      RFID research</a> (documents the proprietary tags). We don't sell or endorse specific hardware.
+      Tag and reader compatibility must be checked against the chosen standard.</p>
     <h4>The ecosystem — who does what</h4>
     <p>Nobody built this space alone. The projects below all serve the same shelf of spools;
       here's the even map, ours included:</p>
@@ -267,17 +268,17 @@
       <tr><td><a href="https://github.com/Donkie/Spoolman" target="_blank" rel="noopener">Spoolman</a></td>
         <td>spool inventory &amp; remaining-weight tracking</td><td>self-hosted server; many readers integrate</td><td>open source</td></tr>
       <tr><td><a href="https://github.com/spuder/OpenSpool" target="_blank" rel="noopener">OpenSpool</a></td>
-        <td>NFC tag → Bambu AMS auto-apply</td><td>ESP32 + PN532 reader, MQTT bridge</td><td>open source</td></tr>
+        <td>OpenSpool JSON tag → Bambu printer auto-apply</td><td>JSON NDEF on NTAG215/216; external ESP32 + PN532 reader and MQTT bridge</td><td>open source</td></tr>
       <tr><td><a href="https://specs.openprinttag.org" target="_blank" rel="noopener">OpenPrintTag</a> (Prusa)</td>
-        <td>open NFC spool-tag standard; printer readers coming</td><td>NDEF spec — material, color, settings, remaining length</td><td>open spec</td></tr>
-      <tr><td><a href="https://opentag3d.info" target="_blank" rel="noopener">OpenTag3D</a></td>
-        <td>open NDEF spool-tag spec with a vendor consortium</td><td>NDEF record on NTAG21x; dual-storable with OpenPrintTag</td><td>open spec</td></tr>
+        <td>open NFC-V spool-tag specification</td><td>CBOR in NDEF on ISO 15693/NFC-V; designed around ICODE SLIX2; not written by ParaMat today</td><td>open spec</td></tr>
+      <tr><td><a href="https://opentag3d.info/spec.html" target="_blank" rel="noopener">OpenTag3D</a></td>
+        <td>open spool-tag specification</td><td>binary memory map in NDEF on NTAG213/215/216 or SLIX2; not written by ParaMat today</td><td>open spec</td></tr>
       <tr><td>SimplyPrint</td>
         <td>full print-farm platform: filament DB, tag read/write, inventory</td><td>cloud platform, all major tag standards</td><td>freemium SaaS</td></tr>
       <tr><td><a href="https://github.com/SoftFever/OrcaSlicer" target="_blank" rel="noopener">Orca</a> / <a href="https://github.com/prusa3d/PrusaSlicer" target="_blank" rel="noopener">Prusa</a> / <a href="https://github.com/Ultimaker/Cura" target="_blank" rel="noopener">Cura</a> presets</td>
         <td>per-brand tuned profiles inside each slicer</td><td>preset libraries shipped with the slicers</td><td>open source</td></tr>
       <tr class="us"><td>ParaMat3D (this site)</td>
-        <td>cross-source consensus settings with the disagreement shown, barcode/label scan, open-tag write, strength prediction with calibrated uncertainty</td>
+        <td>cross-source consensus settings with the disagreement shown, barcode/label scan, OpenSpool tag write, strength prediction with calibrated uncertainty</td>
         <td>merges the openly licensed sources; physics + measured-data model</td><td>MIT code · CC BY data · free</td></tr>
     </table></div>
     <p>Everyone above is credited as part of one ecosystem. We hyperlink the projects under
@@ -800,19 +801,7 @@
     telem("pick",m);
     card.scrollIntoView({behavior:"smooth",block:"nearest"})}
 
-  function optRecord(m){
-    const r={material_class:"FFF"};
-    if(FAM2OPT[m.family])r.material_type=FAM2OPT[m.family];
-    r.brand_name=m.brand;r.material_name=m.product;r.material_abbreviation=m.family;
-    if(m.dens!=null)r.density=m.dens;r.filament_diameter=1.75;
-    if(m.nmin!=null)r.min_print_temperature=m.nmin;if(m.nmax!=null)r.max_print_temperature=m.nmax;
-    if(m.bmin!=null)r.min_bed_temperature=m.bmin;if(m.bmax!=null)r.max_bed_temperature=m.bmax;
-    if(m.chamber!=null)r.chamber_temperature=m.chamber;
-    return r;
-  }
-  function optYaml(m){const r=optRecord(m);
-    return "# OpenPrintTag data record — write to an NTAG21x with the OpenPrintTag encoder\n# specs.openprinttag.org · generated by ParaMat\n"+Object.entries(r).map(([k,v])=>`${k}: ${v}`).join("\n")+"\n";}
-  function openSpool(m){const o={protocol:"openspool",version:"1.0",type:(FAM2OPT[m.family]||m.family||"PLA"),brand:m.brand,min_temp:String(m.nmin??m.noz??""),max_temp:String(m.nmax??m.noz??"")};if(m.dens!=null)o.density=m.dens;return o;}
+  function openSpool(m){const o={protocol:"openspool",version:"1.0",type:(FAM2OPT[m.family]||m.family||"PLA"),brand:m.brand,min_temp:String(m.nmin??m.noz??""),max_temp:String(m.nmax??m.noz??"")};const h=(m.hex||[]).find(v=>/^#?[0-9a-f]{6}$/i.test(v));if(h)o.color_hex=h.replace("#","").toUpperCase();if(m.dens!=null)o.density=m.dens;return o;}
   // OrcaSlicer / Bambu Studio importable filament preset (values as string arrays)
   function orcaProfile(m,temp){const s=v=>[String(v)];
     const o={type:"filament",name:`${m.brand} ${m.product} · ParaMat`,from:"User",is_custom_defined:"1",version:"1.9.0.0",
@@ -868,15 +857,14 @@
       ${extraHtml}
       <div class="export">
         <h3>🏷️ Assign to a reusable RFID tag</h3>
-        <div class="note">Write these conditions to an NFC tag on your spool. OpenPrintTag = the open standard (Prusa, MIT); OpenSpool JSON writes directly and drives a Bambu AMS via the OpenSpool bridge.</div>
+        <div class="note">Write an OpenSpool 1.0 JSON NDEF record to a writable NTAG215/216 tag. This does not create an OpenPrintTag or OpenTag3D record. OpenSpool can pass the settings to supported Bambu printers through its separate ESP32/PN532 bridge.</div>
         <div class="exbtns">
           <button class="btn" id="saveshelf">🗄 Save to shelf</button>
           <button class="btn pri" id="dorca">⬇ Slicer profile (.json)</button>
-          <button class="btn" id="nfc">Write to NFC tag</button>
-          <button class="btn" id="dopt">OpenPrintTag (.yaml)</button>
+          <button class="btn" id="nfc">Write OpenSpool NFC</button>
           <button class="btn" id="dos">OpenSpool JSON</button>
         </div>
-        <pre id="preview">${esc(optYaml(m))}</pre>
+        <pre id="preview">${esc(JSON.stringify(openSpool(m),null,2))}</pre>
       </div>
       <div class="prov">Source: <b>${esc(m.src)}</b>. ${m.ns>=2?`Independent sources agree ${m.niqr!=null?`within <b>${m.niqr} °C</b> on nozzle${m.biqr!=null?` / <b>${m.biqr} °C</b> on bed`:""}`:"exactly"} — use the spread as uncertainty.`:"Only one source has this material — treat as a starting point and verify a small print."}
         <br><span style="display:inline-flex;gap:12px;flex-wrap:wrap;margin-top:4px">
@@ -885,7 +873,6 @@
         <a href="https://github.com/sunnyday-technologies/paramat/issues/new?title=${encodeURIComponent("Data correction: "+m.brand+" "+m.product)}&body=${encodeURIComponent("What looks wrong (value + your source, e.g. the spool label or manufacturer page):\n\n")}" target="_blank" rel="noopener">🗨 Open an issue</a></span></div>
     </div>`;
     card.querySelectorAll(".goal button").forEach(b=>b.onclick=()=>{goal=b.dataset.g;render()});
-    document.getElementById("dopt").onclick=()=>{dl(slug+".openprinttag.yaml",optYaml(m),"application/x-yaml");toast("Downloaded OpenPrintTag record");telem("export_opt",m)};
     document.getElementById("dos").onclick=()=>{navigator.clipboard.writeText(JSON.stringify(openSpool(m))).then(()=>toast("OpenSpool JSON copied"));telem("export_os",m)};
     document.getElementById("nfc").onclick=()=>writeNFC(m);
     document.getElementById("dorca").onclick=()=>{dl(slug+".orca.json",JSON.stringify(orcaProfile(m,temp),null,2),"application/json");toast("Slicer profile downloaded — import in Orca/Bambu");telem("export_orca",m)};

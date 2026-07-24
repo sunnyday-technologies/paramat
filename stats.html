@@ -50,14 +50,14 @@
     <div class="eyebrow">ParaMat · public aggregate</div>
     <h1>Community usage stats</h1>
     <p>Everything ParaMat collects, shown in full: anonymous per-month counters of which materials
-      get opened, exported, or flagged. No IPs, no accounts, no individual events —
+      get opened, exported, queried through MCP, or flagged. No IPs, no accounts, no individual events —
       <a href="legal.html">how this works</a>. <a href="./">← Back to the tool</a></p>
     <div class="pick"><label for="mo" class="eyebrow" style="font-size:10px">Month</label>
       <select id="mo"></select><button id="go">Load</button></div>
   </header>
   <div id="out"><div class="rc"><div class="empty">Loading…</div></div></div>
-  <p class="note">Usage counts come only from visitors who opt in; flags come from anyone tapping
-    "🚩 Looks wrong". Counts are approximate (best-effort, cached up to an hour). Raw JSON:
+  <p class="note">Browser usage counts come only from visitors who opt in; MCP counts are automatic, aggregate-only tool usage; flags come from anyone tapping
+    "🚩 Looks wrong". Counts are approximate (best-effort). MCP telemetry never stores search text, barcodes, IPs, user agents, client identities, or session identifiers. Raw JSON:
     <a id="raw" href="#">/top</a> · License CC BY 4.0.</p>
 </div>
 <script>
@@ -68,7 +68,7 @@
   const now=new Date();
   for(let i=0;i<12;i++){const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));
     const v=d.toISOString().slice(0,7);const o=document.createElement("option");o.value=v;o.textContent=v;mo.appendChild(o);}
-  const LABELS={pick:"Opened",export_orca:"Slicer export",export_opt:"OpenPrintTag",export_os:"OpenSpool",nfc_write:"NFC write",scan_match:"Barcode match",flag:"🚩 Flagged"};
+  const LABELS={pick:"Opened",export_orca:"Slicer export",export_opt:"Legacy YAML export",export_os:"OpenSpool",nfc_write:"OpenSpool NFC write",scan_match:"Barcode match",flag:"🚩 Flagged",mcp_search:"MCP search",mcp_settings:"MCP settings",mcp_gtin_match:"MCP barcode match",mcp_gtin_miss:"MCP barcode miss",mcp_issue_draft:"MCP issue draft",mcp_mfr_spec:"Manufacturer specification",mcp_mfr_val:"Manufacturer validation",test_mfr_val:"Test manufacturer validation",api_mfr_val:"API manufacturer validation",test_mfr_spec:"Test manufacturer specification",api_search:"API search",api_settings:"API settings",api_gtin_match:"API barcode match",api_gtin_miss:"API barcode miss",test_search:"Test search",test_settings:"Test settings",test_gtin_match:"Test barcode match",test_gtin_miss:"Test barcode miss"};
   function table(title,rows,max){
     if(!rows.length)return "";
     return `<div class="rc"><table><thead><tr><th colspan="2">${esc(title)}</th><th style="text-align:right">count</th></tr></thead><tbody>`+
@@ -80,14 +80,21 @@
     document.getElementById("raw").href=API+"/top?month="+month;
     out.innerHTML='<div class="rc"><div class="empty">Loading…</div></div>';
     try{
-      const r=await fetch(API+"/top?month="+month);
+      const r=await fetch(API+"/top?month="+month+"&fresh=1");
       const d=await r.json();
       const rows=(d.rows||[]).filter(x=>x.n>0);
       if(!rows.length){out.innerHTML='<div class="rc"><div class="empty">No data for '+esc(month)+' yet. Counts appear once visitors opt in to sharing (or flag a result).</div></div>';return;}
-      const flags=rows.filter(x=>x.e==="flag"),use=rows.filter(x=>x.e!=="flag");
+      const flags=rows.filter(x=>x.e==="flag");
+      const mcp=rows.filter(x=>x.e.startsWith("mcp_"));
+      const api=rows.filter(x=>x.e.startsWith("api_"));
+      const tests=rows.filter(x=>x.e.startsWith("test_"));
+      const use=rows.filter(x=>x.e!=="flag"&&!x.e.startsWith("mcp_")&&!x.e.startsWith("api_")&&!x.e.startsWith("test_"));
       const max=Math.max(...rows.map(x=>x.n));
       out.innerHTML=(flags.length?`<h2>🚩 Flagged for review</h2>`+table("Materials the community flagged as wrong",flags,max):"")+
-        (use.length?`<h2>Most-used materials</h2>`+table("Opens & exports (opt-in visitors)",use,max):"")+
+        (mcp.length?`<h2>Agent & MCP activity</h2>`+table("Anonymous MCP tool calls",mcp,max):"")+
+        (api.length?`<h2>API & slicer activity</h2>`+table("Anonymous direct API calls",api,max):"")+
+        (tests.length?`<h2>Declared test traffic</h2>`+table("Synthetic MCP load checks (excluded from community activity)",tests,max):"")+
+        (use.length?`<h2>Browser activity</h2>`+table("Opens & exports (opt-in visitors)",use,max):"")+
         (d.truncated?'<p class="note">List truncated — see raw JSON for more.</p>':"");
     }catch(e){out.innerHTML='<div class="rc"><div class="empty">Could not load stats — try again shortly.</div></div>';}
   }

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ParaMat for slicers and AI agents</title>
+<meta name="description" content="Connect slicers and AI agents to ParaMat filament print-setting starting points through MCP or a read-only JSON API.">
+<style>
+:root{color-scheme:light;--navy:#071b33;--green:#97d700;--ink:#172033;--muted:#536174;--line:#dce3e9;--bg:#f5f8fa}*{box-sizing:border-box}body{margin:0;font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}header{background:var(--navy);color:#fff;border-bottom:4px solid var(--green)}nav,main,footer{max-width:980px;margin:auto;padding:18px 24px}nav{display:flex;gap:22px;align-items:center;flex-wrap:wrap}nav a{color:#fff}nav a:first-child{font-size:20px;font-weight:800;text-decoration:none;margin-right:auto}main{background:#fff;margin-top:28px;margin-bottom:28px;border:1px solid var(--line);border-radius:14px;padding:clamp(24px,5vw,52px)}h1{font-size:clamp(32px,6vw,54px);line-height:1.06;margin:.1em 0 .35em}h2{margin-top:2em;line-height:1.2}h3{margin-top:1.5em}.lead{font-size:20px;color:var(--muted);max-width:760px}.callout{border-left:5px solid var(--green);background:#f4fae8;padding:14px 18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}.card{border:1px solid var(--line);border-radius:10px;padding:18px}pre{background:#0b2038;color:#eaf2f8;padding:16px;border-radius:8px;overflow:auto;white-space:pre-wrap}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}a{color:#075f8f}table{width:100%;border-collapse:collapse;display:block;overflow:auto}th,td{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid var(--line)}footer{color:var(--muted)}:focus-visible{outline:3px solid var(--green);outline-offset:3px}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}</style>
+</head>
+<body><header><nav aria-label="Site"><a href="/">ParaMat</a><a href="/stats.html">Stats</a><a href="/llms.txt">Agent index</a><a href="/legal.html">Legal</a></nav></header>
+<main><h1>Filament intelligence for slicers and agents</h1>
+<p class="lead">ParaMat provides read-only, machine-readable consensus settings for 3,700+ FFF/FDM filament product lines. Use MCP for agent workflows or the JSON API directly from a slicer.</p>
+<p class="callout"><strong>Safe starting points, not guaranteed optima.</strong> Returned settings should be checked against the printer, hotend, nozzle, and manufacturer limits, then verified with a small calibration print.</p>
+<h2>Choose an integration</h2><div class="grid">
+<section class="card"><h3>MCP for AI agents</h3><p>Connect a Streamable HTTP MCP client to:</p><pre><code>https://mcp.paramat3d.com</code></pre><p>Recommended flow: <code>identify_by_gtin</code> for a scanned barcode, or <code>search_materials</code> followed by <code>get_print_settings</code>.</p></section>
+<section class="card"><h3>JSON for slicers</h3><p>No agent runtime is required. The read-only endpoints allow cross-origin GET requests and return JSON:</p><pre><code>GET https://mcp.paramat3d.com/v1/search?q=bambu%20pla%20basic
+GET https://mcp.paramat3d.com/v1/settings?brand=Bambu%20Lab&amp;product=PLA%20Basic
+GET https://mcp.paramat3d.com/v1/gtin?barcode=...</code></pre></section></div>
+<h2>From a label photo to settings</h2><p>A vision-capable slicer or agent can read the visible brand, product family, and barcode from a spool label, then call <code>identify_by_gtin</code> when a barcode is reliable or <code>search_materials</code> with the recognized label text. It should show candidate identity and confidence before calling <code>get_print_settings</code>; image files are not uploaded to or retained by ParaMat.</p>
+<h2>MCP tools</h2><table><thead><tr><th>Tool</th><th>Purpose</th></tr></thead><tbody>
+<tr><td><code>search_materials</code></td><td>Resolve label text to candidate brand/product identities.</td></tr>
+<tr><td><code>get_print_settings</code></td><td>Return nozzle and bed ranges, flow, volumetric speed, fan, retraction, pressure advance, density, handling guidance, confidence, and sources where available.</td></tr>
+<tr><td><code>identify_by_gtin</code></td><td>Resolve an EAN/UPC/GTIN barcode to a material and its settings.</td></tr>
+<tr><td><code>prepare_data_issue</code></td><td>Create a reviewable issue-email draft. It never sends or stores the report.</td></tr>
+</tbody></table>
+<h2>Minimal slicer example</h2><pre><code>const url = new URL("https://mcp.paramat3d.com/v1/settings");
+url.searchParams.set("brand", filament.brand);
+url.searchParams.set("product", filament.product);
+const response = await fetch(url);
+if (!response.ok) throw new Error(`ParaMat lookup failed: ${response.status}`);
+const settings = await response.json();
+// Present as suggested starting values; let the operator review before applying.</code></pre>
+<h2>Application guidance</h2><ul><li>Keep missing values as unknown; do not invent defaults.</li><li>Show source count and cross-source spread beside recommendations.</li><li>Require operator review before changing an active printer profile.</li><li>Respect hardware and material maximum ratings.</li><li>Relay the ParaMat attribution and calibration disclaimer.</li></ul>
+<h2>For filament manufacturers</h2><p>Publish revisioned, machine-readable settings through the <a href="/manufacturers">ParaMat manufacturer program</a>. Verified authority is shown separately from community confidence so agents know whether a profile is official, cross-confirmed, or single-source.</p>
+<h2>Report missing or incorrect data</h2><p>Agents can call <code>prepare_data_issue</code>, then present or send the returned draft through an approved email capability. Humans and programs can also write directly to <a href="mailto:paramat3d@sunn3d.com">paramat3d@sunn3d.com</a>. ParaMat’s MCP endpoint itself does not send email, which prevents it from being used as an open mail relay.</p>
+<h2>Discovery and license</h2><p><a href="/server.json">MCP server manifest</a> · <a href="/llms.txt">LLM-readable index</a> · <a href="https://github.com/sunnyday-technologies/paramat">source and issues</a></p><p>Dataset: CC BY 4.0. Attribute “ParaMat / Sunnyday Technologies” and link to <a href="https://paramat3d.com">paramat3d.com</a>.</p>
+</main><footer>ParaMat by Sunnyday Technologies · <a href="mailto:paramat3d@sunn3d.com">paramat3d@sunn3d.com</a></footer></body></html>
