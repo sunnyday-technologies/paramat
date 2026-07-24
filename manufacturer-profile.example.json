@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "manufacturer": "Example Materials, Inc.",
+  "brand": "Example",
+  "product": "PLA Standard",
+  "material_family": "PLA",
+  "profile_revision": "2026-07-24",
+  "effective_date": "2026-07-24",
+  "manufacturer_profile_url": "https://example.com/filaments/pla-standard/settings",
+  "authorized_contact": { "name": "Profile Owner", "email": "materials@example.com", "role": "Technical Support" },
+  "identifiers": { "gtins": ["1234567890123"], "skus": ["PLA-STD-1000"] },
+  "settings": {
+    "nozzle_c": { "recommended": 215, "min": 200, "max": 225 },
+    "bed_c": { "recommended": 55, "min": 45, "max": 60 },
+    "chamber_c": null,
+    "first_layer": { "nozzle_c": 220, "bed_c": 60 },
+    "flow_ratio": 1.0,
+    "max_volumetric_speed_mm3s": 15,
+    "fan_pct": { "min": 80, "max": 100 },
+    "retraction": { "length_mm": null, "speed_mm_s": null },
+    "pressure_advance": null,
+    "drying": "Follow the manufacturer's current product guidance.",
+    "enclosure": "not_required"
+  },
+  "hardware_notes": ["Abrasive-filled variants require an abrasion-resistant nozzle."],
+  "withdrawn": false
+}

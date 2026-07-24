@@ -1,0 +1,13 @@
+{
+    "$schema":  "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+    "name":  "com.paramat3d/filament-settings",
+    "title":  "ParaMat Filament Settings",
+    "description":  "Read-only consensus FFF/FDM filament print-setting starting points for slicers and AI agents.",
+    "version":  "1.3.0",
+    "remotes":  [
+                    {
+                        "type":  "streamable-http",
+                        "url":  "https://mcp.paramat3d.com"
+                    }
+                ]
+}

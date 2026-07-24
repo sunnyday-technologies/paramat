@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paramat3d.com/manufacturer-profile.schema.json",
+  "title": "ParaMat Manufacturer Filament Profile",
+  "description": "A manufacturer-authored FFF/FDM filament settings package for ParaMat verification.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "manufacturer", "brand", "product", "material_family", "profile_revision", "effective_date", "manufacturer_profile_url", "authorized_contact", "settings"],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "manufacturer": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "brand": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "product": { "type": "string", "minLength": 1, "maxLength": 180 },
+    "material_family": { "type": "string", "minLength": 2, "maxLength": 24 },
+    "profile_revision": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "effective_date": { "type": "string", "format": "date" },
+    "manufacturer_profile_url": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "authorized_contact": {
+      "type": "object", "additionalProperties": false, "required": ["name", "email"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "email": { "type": "string", "format": "email", "maxLength": 254 },
+        "role": { "type": "string", "maxLength": 120 }
+      }
+    },
+    "identifiers": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "gtins": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[0-9]{8,14}$" } },
+        "skus": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 100 } }
+      }
+    },
+    "settings": {
+      "type": "object", "additionalProperties": false, "required": ["nozzle_c", "bed_c"],
+      "properties": {
+        "nozzle_c": { "$ref": "#/$defs/temperatureRange" },
+        "bed_c": { "$ref": "#/$defs/temperatureRange" },
+        "chamber_c": { "type": ["number", "null"], "minimum": 0, "maximum": 250 },
+        "first_layer": { "type": "object", "additionalProperties": false, "properties": { "nozzle_c": { "type": ["number", "null"], "minimum": 0, "maximum": 500 }, "bed_c": { "type": ["number", "null"], "minimum": 0, "maximum": 250 } } },
+        "flow_ratio": { "type": ["number", "null"], "minimum": 0.5, "maximum": 1.5 },
+        "max_volumetric_speed_mm3s": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "fan_pct": { "$ref": "#/$defs/percentRange" },
+        "retraction": { "type": "object", "additionalProperties": false, "properties": { "length_mm": { "type": ["number", "null"], "minimum": 0, "maximum": 20 }, "speed_mm_s": { "type": ["number", "null"], "minimum": 0, "maximum": 150 } } },
+        "pressure_advance": { "type": ["number", "null"], "minimum": 0, "maximum": 2 },
+        "drying": { "type": ["string", "null"], "maxLength": 240 },
+        "enclosure": { "type": ["string", "null"], "enum": ["not_required", "recommended", "required", null] }
+      }
+    },
+    "hardware_notes": { "type": "array", "items": { "type": "string", "maxLength": 300 }, "maxItems": 20 },
+    "withdrawn": { "type": "boolean", "default": false }
+  },
+  "$defs": {
+    "temperatureRange": {
+      "type": "object", "additionalProperties": false, "required": ["recommended", "min", "max"],
+      "properties": { "recommended": { "type": "number", "minimum": 0, "maximum": 500 }, "min": { "type": "number", "minimum": 0, "maximum": 500 }, "max": { "type": "number", "minimum": 0, "maximum": 500 } }
+    },
+    "percentRange": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": { "min": { "type": "number", "minimum": 0, "maximum": 100 }, "max": { "type": "number", "minimum": 0, "maximum": 100 } }, "required": ["min", "max"]
+    }
+  }
+}
