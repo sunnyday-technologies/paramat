@@ -310,6 +310,10 @@
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script id="d" type="application/json">__DATA__</script>
+<script type="module">
+  import { parseFilamentLabel } from "./label-parser-v2.mjs";
+  window.ParaMatLabelParserV2 = { parseFilamentLabel };
+</script>
 <script>
 (function(){
   const RAW=JSON.parse(document.getElementById("d").textContent);
@@ -332,11 +336,11 @@
   // Only surfaced when the product name / label explicitly states it, marked "as stated".
   function flameLabel(text){
     const t=String(text||"");
-    let m=t.match(/\bUL[\s-]?94[\s-]?(V[\s-]?[012]|HB|5VA|5VB)?\b/i);
-    if(m)return m[1]?("UL94 "+m[1].toUpperCase().replace(/\s/,"-")):"UL94-rated";
-    m=t.match(/\bV[\s-]?([012])\b/);            // e.g. "PETG V0" on a filament label = UL94
-    if(m)return "UL94 V-"+m[1];
-    if(/\bflame[- ]?retardant\b|\bFR\b/i.test(t))return "Flame-retardant";
+    let m=t.match(/\bUL[\s-]?94(?:[\s:-]*(V[\s-]?[012]|HB|5VA|5VB))?\b/i);
+    if(m)return m[1]?("UL94 "+m[1].toUpperCase().replace(/\s+/,"-")):"UL94-rated";
+    // Bare "V0" and "FR" are ambiguous in noisy OCR. Only preserve an
+    // explicit label/manufacturer statement; never infer flame performance.
+    if(/\bflame[- ]?retard(?:ant|ancy)\b|\bflame[- ]?resistant\b/i.test(t))return "Flame-retardant";
     return null;
   }
   function flameChip(text){const f=flameLabel(text);return f?`<span class="chip">🔥 ${esc(f)} · as stated</span>`:"";}
@@ -643,19 +647,32 @@
   // Plausibility guard: nozzle 140–500 °C, bed ≤150 °C — misreads (e.g. "21c"
   // for "210 °C") are dropped rather than shown as garbage.
   function parseLabel(text){
+    if(window.ParaMatLabelParserV2){
+      const v2=window.ParaMatLabelParserV2.parseFilamentLabel(text,{
+        knownBrands:[...new Set(DATA.map(m=>m.brand).filter(Boolean))]
+      }),f=v2.fields||{},val=x=>x&&x.value!=null?x.value:null;
+      return {fam:val(f.material_family),noz:val(f.nozzle_temperature),bed:val(f.bed_temperature),
+        spd:val(f.print_speed),diameter:val(f.diameter),weight:val(f.net_weight),
+        drying:f.drying?{temp:val(f.drying.temperature),hours:val(f.drying.duration)}:null,
+        brand:val(f.brand),product:val(f.product_name),color:val(f.color),
+        ids:(f.identifiers||[]).map(val).filter(Boolean),
+        gtins:(f.gtin_candidates||[]).map(val).filter(Boolean),
+        flame:f.flame_statement?f.flame_statement.value:null,
+        raw:v2.raw_text||String(text||""),structured:v2};
+    }
+    // Conservative fallback if the module failed to load.
     const t=fixOcr(text).replace(/\s+/g," ");
     const fam=(t.match(/\b(PLA\+?|PETG|PET-?G|ABS|ASA|TPU|TPE|PVA|PVB|PPS(?:-?GF\d*|-?CF)?|PA-?CF|PEEK|PEKK|PCTG|HIPS|PSU|PPSU)\b/i)||[])[1]
-      ||(t.match(/\b(PC|PA\d*|PP)\b/)||[])[1]||null;   // 2-letter codes: case-sensitive (OCR garbage prints lowercase)
+      ||(t.match(/\b(PC|PA\d*|PP)\b/)||[])[1]||null;
     const rng=re=>{const m=t.match(re);return m?(m[2]?[+m[1],+m[2]]:[+m[1],+m[1]]):null;};
     let noz=rng(/(?:nozzle|print(?:ing)?\s*temp\w*|hotend|extruder)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
     let bed=rng(/(?:heat\s*bed|heatbed|\bbed\b|platform)\D{0,14}(\d{2,3})(?:\s*°?\s*C?\s*[-–~]\s*(\d{2,3}))?/i);
     if(noz&&!(noz[0]>=140&&noz[0]<=500&&noz[1]>=140&&noz[1]<=500))noz=null;
     if(bed&&!(bed[0]>=0&&bed[1]<=150&&bed[0]<=bed[1]))bed=null;
-    // fallback: a bare plausible range like "210°C-240°C" is a nozzle range
     if(!noz){const m2=t.match(/(\d{3})\s*(?:°\s*C)?\s*[-–~]\s*(\d{3})\s*°?\s*C/i);
       if(m2){const r=[+m2[1],+m2[2]];if(r[0]>=140&&r[1]<=500&&r[0]<=r[1])noz=r;}}
     const spd=(t.match(/(\d{2,4})\s*mm\s*\/?\s*s/i)||[])[1];
-    return {fam,noz,bed,spd:spd?+spd:null,flame:flameLabel(text)};
+    return {fam,noz,bed,spd:spd?+spd:null,flame:flameLabel(text),raw:String(text||"")};
   }
   function renderLabelResult(p,cands){
     const fam=p.fam?p.fam.toUpperCase():null;
@@ -664,7 +681,10 @@
     const tiles=[];
     if(nz)tiles.push(`<div class="tile"><div class="k">Nozzle · label</div><div class="v tnum">${nz}<span class="u"> °C</span></div></div>`);
     if(bd)tiles.push(`<div class="tile"><div class="k">Bed · label</div><div class="v tnum">${bd}<span class="u"> °C</span></div></div>`);
-    if(p.spd)tiles.push(`<div class="tile"><div class="k">Speed · label</div><div class="v tnum">${p.spd}<span class="u"> mm/s</span></div></div>`);
+    if(p.spd)tiles.push(`<div class="tile"><div class="k">Speed · label</div><div class="v tnum">${fmtT(p.spd)}<span class="u"> mm/s</span></div></div>`);
+    if(p.diameter)tiles.push(`<div class="tile"><div class="k">Diameter · label</div><div class="v tnum">${p.diameter}<span class="u"> mm</span></div></div>`);
+    if(p.weight)tiles.push(`<div class="tile"><div class="k">Net weight · label</div><div class="v tnum">${p.weight}<span class="u"> g</span></div></div>`);
+    if(p.drying&&p.drying.temp)tiles.push(`<div class="tile"><div class="k">Drying · label</div><div class="v tnum">${p.drying.temp}<span class="u"> °C${p.drying.hours?` / ${p.drying.hours}h`:""}</span></div></div>`);
     shown=cands;
     const cbtns=cands.length
       ? `<div class="prov" style="padding-bottom:6px"><b>Match in our database</b> — tap for consensus + strength/finish goal:</div><div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px">${cands.slice(0,6).map((m,j)=>`<button class="btn cand" data-j="${j}" style="font-size:12.5px">${esc(m.brand)} ${esc(m.product)}</button>`).join("")}</div>`
@@ -673,14 +693,20 @@
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name">📷 Read from your label</div>
         <div class="chips">${fam?`<span class="chip">${esc(fam)}</span>`:""}<span class="chip warn">OCR — verify against the spool</span>${metaChips(p.fam)}${p.flame?`<span class="chip">🔥 ${esc(p.flame)} · as stated</span>`:""}</div></div>
-      ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No temperatures detected — try search by name.</div>`}
+      ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No structured settings detected — try search by name.</div>`}
+      ${p.raw?`<details class="prov"><summary><b>Review captured label text</b></summary>${p.ids&&p.ids.length?`<div style="margin-top:7px"><b>Possible product/lot codes:</b> ${p.ids.map(esc).join(", ")}</div>`:""}<pre style="white-space:pre-wrap;max-height:180px;overflow:auto">${esc(p.raw)}</pre></details>`:""}
       <div class="export"><h3>🗄 Add to your shelf</h3>
         <div class="row"><input id="spoolname" placeholder="Name this spool" value="${esc(fam||'Filament')}" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)"><button class="btn pri" id="savespool" style="justify-content:center">Save</button></div></div>
       ${cbtns}
     </div>`;
     card.querySelectorAll(".cand").forEach(b=>b.onclick=()=>pick(shown[+b.dataset.j]));
     const sv=document.getElementById("savespool");
-    if(sv)sv.onclick=()=>shelfAdd({name:(document.getElementById("spoolname").value||fam||"Filament"),family:fam,noz:p.noz,bed:p.bed,spd:p.spd,source:"label"});
+    if(sv)sv.onclick=()=>shelfAdd({name:(document.getElementById("spoolname").value||p.product||fam||"Filament"),
+      family:fam,brand:p.brand||null,color:p.color||null,noz:p.noz,bed:p.bed,spd:p.spd,
+      diameter:p.diameter||null,weight:p.weight||null,
+      drynote:p.drying&&p.drying.temp?(p.drying.temp+"°C"+(p.drying.hours?"/"+p.drying.hours+"h":"")):null,
+      label_ids:p.ids||[],label_gtins:p.gtins||[],label_text:p.raw||null,
+      flame:p.flame||null,source:"label"});
   }
 
   // ---- personal shelf: on-device inventory of YOUR spools (works for rare/uncatalogued) ----
