@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "receipt_id": "local-receipt-2026-07-24-001",
+  "recorded_at": "2026-07-24T18:30:00Z",
+  "material": {
+    "brand": "Prusament",
+    "product": "PETG",
+    "family": "PETG",
+    "spool_ref": "local-spool-042",
+    "catalog_revision": "operator-recorded"
+  },
+  "printer": {
+    "model": "Operator printer A",
+    "printer_ref": "local-printer-a",
+    "nozzle_diameter_mm": 0.4,
+    "nozzle_material": "hardened steel",
+    "enclosed": false
+  },
+  "job": {
+    "job_ref": "local-job-2026-07-24-001",
+    "slicer": "OrcaSlicer",
+    "slicer_version": "operator-recorded",
+    "profile_ref": "operator-reviewed-petg-v3",
+    "geometry_class": "functional bracket",
+    "estimated_material_g": 84
+  },
+  "settings_used": {
+    "nozzle_c": 250,
+    "bed_c": 85,
+    "chamber_c": null,
+    "layer_height_mm": 0.2,
+    "print_speed_mm_s": 120,
+    "flow_ratio": 1,
+    "fan_pct": 40,
+    "max_volumetric_speed_mm3s": 12,
+    "retraction_length_mm": 0.8,
+    "pressure_advance": 0.04
+  },
+  "material_condition": {
+    "moisture_state": "dried",
+    "drying_temp_c": 65,
+    "drying_duration_h": 6,
+    "conditioning_rh_pct": null,
+    "conditioning_duration_h": null,
+    "measured_moisture_pct": null,
+    "measurement_method": null,
+    "time_since_drying_h": 2
+  },
+  "process_context": {
+    "build_orientation": "flat",
+    "plate_part_count": 4,
+    "plate_position": "front-left",
+    "interlayer_time_s": null,
+    "actual_nozzle_c": null,
+    "actual_print_speed_mm_s": null,
+    "specimen_standard": null,
+    "specimen_thickness_mm": null,
+    "ambient_rh_pct": 42
+  },
+  "result": {
+    "status": "success",
+    "rating": 4,
+    "failure_classes": [],
+    "notes": "Completed without visible under-extrusion or first-layer release."
+  },
+  "operator_correction": {
+    "summary": "Reduced fan after the first trial.",
+    "changed_fields": [
+      "settings_used.fan_pct"
+    ]
+  },
+  "provenance": {
+    "recommendation_source": "paramat",
+    "preflight_decision": "compatible",
+    "evidence_revision": "operator-recorded"
+  },
+  "privacy": {
+    "share_scope": "private",
+    "consent_to_share": false,
+    "retention_days": null
+  }
+}

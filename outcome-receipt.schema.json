@@ -1,0 +1,506 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paramat3d.com/outcome-receipt.schema.json",
+  "title": "ParaMat print outcome receipt",
+  "description": "A private-by-default record joining filament identity, equipment, actual settings, and an operator-observed print result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "recorded_at",
+    "material",
+    "printer",
+    "job",
+    "settings_used",
+    "result",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "receipt_id": {
+      "type": "string",
+      "description": "Opaque identifier controlled by the operator; do not use a name or email address.",
+      "minLength": 1,
+      "maxLength": 160
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "brand",
+        "product",
+        "family"
+      ],
+      "properties": {
+        "brand": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "product": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "family": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40
+        },
+        "spool_ref": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "catalog_revision": {
+          "type": "string",
+          "maxLength": 120
+        }
+      }
+    },
+    "printer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "nozzle_diameter_mm"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 180
+        },
+        "printer_ref": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "nozzle_diameter_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 5
+        },
+        "nozzle_material": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "enclosed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slicer"
+      ],
+      "properties": {
+        "job_ref": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "slicer": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "slicer_version": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "profile_ref": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "geometry_class": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "estimated_material_g": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100000
+        }
+      }
+    },
+    "settings_used": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nozzle_c",
+        "bed_c"
+      ],
+      "properties": {
+        "nozzle_c": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "bed_c": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 250
+        },
+        "chamber_c": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 250
+        },
+        "layer_height_mm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "maximum": 5
+        },
+        "print_speed_mm_s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "flow_ratio": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0.5,
+          "maximum": 1.5
+        },
+        "fan_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "max_volumetric_speed_mm3s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "retraction_length_mm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 20
+        },
+        "pressure_advance": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "partial",
+            "failure",
+            "aborted"
+          ]
+        },
+        "rating": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 5
+        },
+        "failure_classes": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 12,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "operator_correction": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "changed_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "maxItems": 24,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "recommendation_source": {
+          "type": "string",
+          "enum": [
+            "paramat",
+            "manufacturer",
+            "slicer",
+            "operator",
+            "other"
+          ]
+        },
+        "preflight_decision": {
+          "type": "string",
+          "enum": [
+            "compatible",
+            "warning",
+            "insufficient_evidence",
+            "blocked_by_policy",
+            "not_run"
+          ]
+        },
+        "evidence_revision": {
+          "type": "string",
+          "maxLength": 120
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "share_scope",
+        "consent_to_share"
+      ],
+      "properties": {
+        "share_scope": {
+          "type": "string",
+          "default": "private",
+          "enum": [
+            "private",
+            "anonymous_aggregate",
+            "explicit_research_release"
+          ]
+        },
+        "consent_to_share": {
+          "type": "boolean",
+          "default": false
+        },
+        "retention_days": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 3650
+        }
+      }
+    },
+    "material_condition": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Optional quantified filament state; ambient test-room RH alone is not a filament moisture condition.",
+      "properties": {
+        "moisture_state": {
+          "type": "string",
+          "enum": [
+            "unknown",
+            "dried",
+            "ambient_conditioned",
+            "controlled_rh",
+            "saturated",
+            "measured"
+          ]
+        },
+        "drying_temp_c": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 200
+        },
+        "drying_duration_h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "conditioning_rh_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "conditioning_duration_h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "measured_moisture_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "measurement_method": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 160
+        },
+        "time_since_drying_h": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 10000
+        }
+      }
+    },
+    "process_context": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "description": "Optional fields that distinguish major geometry, thermal-history, and machine-calibration effects.",
+      "properties": {
+        "build_orientation": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "flat",
+            "on_edge",
+            "upright",
+            "mixed",
+            "unknown",
+            null
+          ]
+        },
+        "plate_part_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "plate_position": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "interlayer_time_s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100000
+        },
+        "actual_nozzle_c": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 500
+        },
+        "actual_print_speed_mm_s": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "specimen_standard": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 120
+        },
+        "specimen_thickness_mm": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "maximum": 1000
+        },
+        "ambient_rh_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

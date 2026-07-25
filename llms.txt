@@ -1,6 +1,6 @@
 # ParaMat
 
-> Free, open reference of consensus 3D-printing (FFF/FDM) filament settings for 3,700+
+> Free, open reference of consensus 3D-printing (FFF/FDM) filament settings for 3,689
 > brand-specific product lines — nozzle/bed temperatures with ranges and cross-source spread,
 > flow, max volumetric speed, density, drying/enclosure guidance, color variants, SKUs, and
 > GTIN barcodes. Data license: CC BY 4.0 (attribute "ParaMat / Sunnyday Technologies").
@@ -41,7 +41,7 @@ Connect any MCP client via Streamable HTTP (stateless, no auth):
 - Endpoint: https://mcp.paramat3d.com (legacy alias: https://paramat-mcp.nick-1d7.workers.dev)
 - Tools: `search_materials(query)` → candidates · `get_print_settings(brand, product)` → full
   consensus record with per-goal temps, spread, confidence · `identify_by_gtin(barcode)` → material
-  from a spool barcode. Responses embed the CC BY 4.0 attribution and the verify-before-print
+  from a spool barcode · `preflight_print_job(...)` detects identity/hardware/material conflicts · `get_outcome_receipt_spec()` and `validate_outcome_receipt(receipt)` support private outcome capture. Responses embed the CC BY 4.0 attribution and the verify-before-print
   disclaimer — please relay both to end users.
 
 ## Pages
@@ -53,11 +53,15 @@ Connect any MCP client via Streamable HTTP (stateless, no auth):
 ## Direct integration for slicers and agents
 
 - Integration guide: https://paramat3d.com/agents
+- Private local outcome capture: https://paramat3d.com/outcomes
 - MCP endpoint: https://mcp.paramat3d.com
-- MCP tools: search_materials, get_print_settings, identify_by_gtin, prepare_data_issue, get_manufacturer_submission_spec
+- MCP tools: search_materials, get_print_settings, identify_by_gtin, preflight_print_job, get_outcome_receipt_spec, validate_outcome_receipt, prepare_data_issue, get_manufacturer_submission_spec, validate_manufacturer_profile
 - JSON search: https://mcp.paramat3d.com/v1/search?q=bambu%20pla%20basic
 - JSON settings: https://mcp.paramat3d.com/v1/settings?brand=Bambu%20Lab&product=PLA%20Basic
 - JSON barcode: https://mcp.paramat3d.com/v1/gtin?barcode=YOUR_BARCODE
+- Read-only preflight: POST https://mcp.paramat3d.com/v1/preflight
+- Outcome contract: https://paramat3d.com/outcome-receipt.schema.json
+- Non-retaining receipt validation: POST https://mcp.paramat3d.com/v1/outcome/validate
 - MCP discovery manifest: https://paramat3d.com/server.json
 - Data issue email: paramat3d@sunn3d.com
 

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://paramat3d.com/preflight-request.schema.json",
+  "title": "ParaMat filament print preflight request",
+  "description": "Read-only material, profile, printer, spool, and job facts used to detect consequential mismatches before applying a filament profile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["material", "spool", "slicer_profile", "printer", "job"],
+  "properties": {
+    "material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["brand", "product", "family"],
+      "properties": {
+        "brand": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "product": { "type": "string", "minLength": 1, "maxLength": 180 },
+        "family": { "type": "string", "minLength": 2, "maxLength": 40 }
+      }
+    },
+    "spool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["family"],
+      "properties": {
+        "family": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "spool_ref": { "type": "string", "maxLength": 120 },
+        "remaining_g": { "type": "number", "minimum": 0, "maximum": 100000 },
+        "dry_state": {
+          "type": "string",
+          "enum": ["dry", "conditioned", "unknown", "wet", "needs_drying"]
+        }
+      }
+    },
+    "slicer_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["material_family", "nozzle_c", "bed_c"],
+      "properties": {
+        "material_family": { "type": "string", "minLength": 2, "maxLength": 40 },
+        "profile_ref": { "type": "string", "maxLength": 160 },
+        "nozzle_c": { "type": "number", "minimum": 0, "maximum": 500 },
+        "bed_c": { "type": "number", "minimum": 0, "maximum": 250 }
+      }
+    },
+    "printer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hotend_max_c", "bed_max_c", "nozzle_material", "nozzle_diameter_mm", "enclosed"],
+      "properties": {
+        "model": { "type": "string", "maxLength": 180 },
+        "hotend_max_c": { "type": "number", "minimum": 0, "maximum": 600 },
+        "bed_max_c": { "type": "number", "minimum": 0, "maximum": 300 },
+        "nozzle_material": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "nozzle_diameter_mm": { "type": "number", "exclusiveMinimum": 0, "maximum": 5 },
+        "enclosed": { "type": "boolean" }
+      }
+    },
+    "job": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "job_ref": { "type": "string", "maxLength": 160 },
+        "estimated_material_g": { "type": "number", "minimum": 0, "maximum": 100000 }
+      }
+    }
+  }
+}

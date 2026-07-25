@@ -1,0 +1,31 @@
+{
+  "material": {
+    "brand": "Prusament",
+    "product": "PETG",
+    "family": "PETG"
+  },
+  "spool": {
+    "family": "PETG",
+    "spool_ref": "local-spool-042",
+    "remaining_g": 620,
+    "dry_state": "dry"
+  },
+  "slicer_profile": {
+    "material_family": "PETG",
+    "profile_ref": "operator-reviewed-petg-v3",
+    "nozzle_c": 250,
+    "bed_c": 85
+  },
+  "printer": {
+    "model": "Operator printer A",
+    "hotend_max_c": 300,
+    "bed_max_c": 110,
+    "nozzle_material": "hardened steel",
+    "nozzle_diameter_mm": 0.4,
+    "enclosed": false
+  },
+  "job": {
+    "job_ref": "local-job-2026-07-24-001",
+    "estimated_material_g": 84
+  }
+}

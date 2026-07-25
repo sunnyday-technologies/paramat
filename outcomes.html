@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ParaMat private print outcomes</title>
+<meta name="description" content="Record private, local-first filament print outcome receipts and export them as versioned JSON.">
+<style>
+:root{color-scheme:light;--navy:#071b33;--green:#97d700;--ink:#172033;--muted:#536174;--line:#dce3e9;--bg:#f5f8fa;--bad:#9b2c2c}
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--bg)}
+header{background:var(--navy);color:#fff;border-bottom:4px solid var(--green)}nav,main,footer{max-width:980px;margin:auto;padding:18px 24px}
+nav{display:flex;gap:20px;align-items:center;flex-wrap:wrap}nav a{color:#fff}nav a:first-child{font-size:20px;font-weight:800;text-decoration:none;margin-right:auto}
+main{background:#fff;margin-top:28px;margin-bottom:28px;border:1px solid var(--line);border-radius:14px;padding:clamp(22px,5vw,48px)}
+h1{font-size:clamp(30px,6vw,50px);line-height:1.06;margin:.1em 0 .35em}h2{margin-top:2em}.lead{font-size:19px;color:var(--muted);max-width:760px}
+.notice{border-left:5px solid var(--green);background:#f4fae8;padding:14px 18px;margin:20px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:block;font-size:13px;font-weight:700;color:var(--muted)}input,select,textarea,button{width:100%;font:inherit;margin-top:5px;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+textarea{min-height:86px;resize:vertical}button{cursor:pointer;font-weight:750}.primary{background:var(--navy);color:#fff;border-color:var(--navy)}.danger{color:var(--bad)}
+.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:18px}.status{min-height:26px;color:var(--muted);margin-top:12px}
+table{width:100%;border-collapse:collapse;display:block;overflow:auto}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:var(--muted)}
+.empty{padding:16px;color:var(--muted);border:1px dashed var(--line);border-radius:8px}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}a{color:#075f8f}
+:focus-visible{outline:3px solid var(--green);outline-offset:3px}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header><nav aria-label="Site"><a href="/">ParaMat</a><a href="/agents">Agents</a><a href="/stats">Stats</a><a href="/legal">Legal</a></nav></header>
+<main>
+<h1>Private print outcome receipts</h1>
+<p class="lead">Record what was actually printed, on which equipment, with which settings, and what happened. Receipts stay in this browser unless you explicitly export or validate them.</p>
+<div class="notice"><strong>Private by default.</strong> Saving does not contact ParaMat. Use opaque spool, printer, and job references—never customer names, email addresses, or confidential part names.</div>
+
+<form id="receipt">
+<h2>Material and equipment</h2>
+<div class="grid">
+<label>Brand<input id="brand" required maxlength="120" autocomplete="organization"></label>
+<label>Product<input id="product" required maxlength="180"></label>
+<label>Material family<input id="family" required maxlength="40" placeholder="PLA, PETG, ABS…"></label>
+<label>Spool reference<input id="spool" maxlength="120" placeholder="local-spool-042"></label>
+<label>Printer model<input id="printer" required maxlength="180"></label>
+<label>Printer reference<input id="printerRef" maxlength="120" placeholder="local-printer-a"></label>
+<label>Nozzle diameter mm<input id="diameter" required type="number" min="0.1" max="5" step="0.05" value="0.4"></label>
+<label>Nozzle material<input id="nozzleMaterial" maxlength="60" placeholder="brass, hardened steel…"></label>
+</div>
+
+<h2>Job and settings actually used</h2>
+<div class="grid">
+<label>Slicer<input id="slicer" required maxlength="120" placeholder="OrcaSlicer"></label>
+<label>Slicer version<input id="slicerVersion" maxlength="80"></label>
+<label>Local job reference<input id="job" maxlength="160"></label>
+<label>Profile reference<input id="profile" maxlength="160"></label>
+<label>Nozzle °C<input id="nozzleC" required type="number" min="0" max="500" step="1"></label>
+<label>Bed °C<input id="bedC" required type="number" min="0" max="250" step="1"></label>
+<label>Layer height mm<input id="layer" type="number" min="0.01" max="5" step="0.01"></label>
+<label>Print speed mm/s<input id="speed" type="number" min="0" max="2000" step="1"></label>
+<label>Flow ratio<input id="flow" type="number" min="0.5" max="1.5" step="0.001"></label>
+<label>Fan %<input id="fan" type="number" min="0" max="100" step="1"></label>
+</div>
+
+<h2>Variability controls <span style="font-size:.7em;color:var(--muted)">(optional, high value)</span></h2>
+<div class="grid">
+<label>Filament moisture state<select id="moistureState"><option value="unknown">Unknown</option><option value="dried">Dried</option><option value="ambient_conditioned">Ambient conditioned</option><option value="controlled_rh">Controlled RH</option><option value="saturated">Saturated</option><option value="measured">Measured moisture</option></select></label>
+<label>Drying temperature Â°C<input id="dryTemp" type="number" min="0" max="200" step="1"></label>
+<label>Drying duration hours<input id="dryHours" type="number" min="0" max="1000" step="0.1"></label>
+<label>Conditioning RH %<input id="conditioningRh" type="number" min="0" max="100" step="0.1"></label>
+<label>Conditioning duration hours<input id="conditioningHours" type="number" min="0" max="10000" step="0.1"></label>
+<label>Measured filament moisture %<input id="measuredMoisture" type="number" min="0" max="100" step="0.001"></label>
+<label>Build orientation<select id="orientation"><option value="unknown">Unknown</option><option value="flat">Flat</option><option value="on_edge">On edge</option><option value="upright">Upright / Z</option><option value="mixed">Mixed</option></select></label>
+<label>Parts on plate<input id="plateCount" type="number" min="1" max="1000" step="1"></label>
+<label>Plate position<input id="platePosition" maxlength="120" placeholder="front-left, x=40 y=60"></label>
+<label>Interlayer time seconds<input id="interlayerTime" type="number" min="0" max="100000" step="0.1"></label>
+<label>Measured actual nozzle Â°C<input id="actualNozzle" type="number" min="0" max="500" step="0.1"></label>
+<label>Measured actual speed mm/s<input id="actualSpeed" type="number" min="0" max="2000" step="0.1"></label>
+<label>Specimen standard<input id="specimenStandard" maxlength="120" placeholder="ASTM D638 Type I"></label>
+<label>Measured specimen thickness mm<input id="specimenThickness" type="number" min="0.001" max="1000" step="0.001"></label>
+<label>Ambient RH during print %<input id="ambientRh" type="number" min="0" max="100" step="0.1"></label>
+</div>
+<p style="color:var(--muted);font-size:13px">Only record measured or known values. Ambient RH is useful context but does not substitute for a measured or controlled filament-moisture state.</p>
+
+<h2>Observed result</h2>
+<div class="grid">
+<label>Result<select id="result" required><option value="success">Success</option><option value="partial">Partial</option><option value="failure">Failure</option><option value="aborted">Aborted</option></select></label>
+<label>Rating<select id="rating"><option value="">Not rated</option><option value="5">5 — excellent</option><option value="4">4 — good</option><option value="3">3 — usable</option><option value="2">2 — poor</option><option value="1">1 — failed</option></select></label>
+<label>Failure classes<input id="failures" maxlength="600" placeholder="warping, stringing (comma separated)"></label>
+<label>Preflight decision<select id="preflight"><option value="not_run">Not run</option><option value="compatible">Compatible</option><option value="warning">Warning</option><option value="insufficient_evidence">Insufficient evidence</option><option value="blocked_by_policy">Blocked by policy</option></select></label>
+<label>Recommendation source<select id="source"><option value="paramat">ParaMat</option><option value="manufacturer">Manufacturer</option><option value="slicer">Slicer</option><option value="operator">Operator</option><option value="other">Other</option></select></label>
+<label>Local retention days<input id="retention" type="number" min="0" max="3650" step="1" placeholder="blank = keep until deleted"></label>
+</div>
+<label style="margin-top:14px">Outcome notes<textarea id="notes" maxlength="2000" placeholder="What succeeded or failed?"></textarea></label>
+<label style="margin-top:14px">Operator correction<textarea id="correction" maxlength="2000" placeholder="What did you change from the starting recommendation?"></textarea></label>
+
+<div class="actions">
+<button class="primary" type="submit">Save privately</button>
+<button id="validate" type="button">Validate without retaining</button>
+<button id="reset" type="reset">Clear form</button>
+</div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+</form>
+
+<h2>Receipts stored in this browser</h2>
+<div class="actions">
+<button id="export" type="button">Export JSON</button>
+<label style="margin:0"><span style="position:absolute;left:-9999px">Import JSON</span><input id="import" type="file" accept="application/json" style="margin:0"></label>
+<button id="deleteAll" class="danger" type="button">Delete all local receipts</button>
+</div>
+<div id="history" style="margin-top:14px"></div>
+</main>
+<footer>ParaMat by Sunnyday Technologies · <a href="/outcome-receipt.schema.json">receipt schema</a> · <a href="mailto:paramat3d@sunn3d.com">paramat3d@sunn3d.com</a></footer>
+<script>
+(() => {
+  "use strict";
+  const KEY = "paramat_outcomes_v1";
+  const $ = id => document.getElementById(id);
+  const text = id => $(id).value.trim();
+  const number = id => $(id).value === "" ? null : Number($(id).value);
+  const esc = value => String(value ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const load = () => { try { const value=JSON.parse(localStorage.getItem(KEY)||"[]"); return Array.isArray(value)?value:[]; } catch { return []; } };
+  const save = value => localStorage.setItem(KEY, JSON.stringify(value));
+  const status = message => $("status").textContent = message;
+  const uuid = () => crypto.randomUUID();
+  const optional = value => value == null || value === "" ? null : value;
+
+  function prune(receipts) {
+    const now = Date.now();
+    return receipts.filter(receipt => {
+      const days = receipt.privacy?.retention_days;
+      if (!Number.isInteger(days) || days <= 0) return true;
+      return Date.parse(receipt.recorded_at) + days * 86400000 > now;
+    });
+  }
+
+  function currentReceipt() {
+    const failureClasses = text("failures").split(",").map(value=>value.trim()).filter(Boolean).slice(0,12);
+    const correction = text("correction");
+    return {
+      schema_version: "1.0.0",
+      receipt_id: "local-" + uuid(),
+      recorded_at: new Date().toISOString(),
+      material: {
+        brand: text("brand"), product: text("product"), family: text("family"),
+        spool_ref: optional(text("spool")), catalog_revision: "operator-recorded"
+      },
+      printer: {
+        model: text("printer"), printer_ref: optional(text("printerRef")),
+        nozzle_diameter_mm: number("diameter"), nozzle_material: optional(text("nozzleMaterial"))
+      },
+      job: {
+        job_ref: optional(text("job")), slicer: text("slicer"),
+        slicer_version: optional(text("slicerVersion")), profile_ref: optional(text("profile"))
+      },
+      settings_used: {
+        nozzle_c: number("nozzleC"), bed_c: number("bedC"),
+        layer_height_mm: number("layer"), print_speed_mm_s: number("speed"),
+        flow_ratio: number("flow"), fan_pct: number("fan")
+      },
+      material_condition: {
+        moisture_state: $("moistureState").value,
+        drying_temp_c: number("dryTemp"),
+        drying_duration_h: number("dryHours"),
+        conditioning_rh_pct: number("conditioningRh"),
+        conditioning_duration_h: number("conditioningHours"),
+        measured_moisture_pct: number("measuredMoisture"),
+        measurement_method: null,
+        time_since_drying_h: null
+      },
+      process_context: {
+        build_orientation: $("orientation").value,
+        plate_part_count: number("plateCount"),
+        plate_position: optional(text("platePosition")),
+        interlayer_time_s: number("interlayerTime"),
+        actual_nozzle_c: number("actualNozzle"),
+        actual_print_speed_mm_s: number("actualSpeed"),
+        specimen_standard: optional(text("specimenStandard")),
+        specimen_thickness_mm: number("specimenThickness"),
+        ambient_rh_pct: number("ambientRh")
+      },
+      result: {
+        status: $("result").value, rating: number("rating"),
+        failure_classes: failureClasses, notes: text("notes")
+      },
+      operator_correction: correction ? { summary: correction, changed_fields: [] } : null,
+      provenance: {
+        recommendation_source: $("source").value,
+        preflight_decision: $("preflight").value,
+        evidence_revision: "operator-recorded"
+      },
+      privacy: {
+        share_scope: "private", consent_to_share: false,
+        retention_days: number("retention")
+      }
+    };
+  }
+
+  function render() {
+    const receipts = prune(load());
+    save(receipts);
+    if (!receipts.length) {
+      $("history").innerHTML = '<div class="empty">No local receipts yet.</div>';
+      return;
+    }
+    $("history").innerHTML = `<table><thead><tr><th>Date</th><th>Material</th><th>Printer</th><th>Result</th><th></th></tr></thead><tbody>${receipts.map((r,index)=>`<tr><td>${esc(new Date(r.recorded_at).toLocaleString())}</td><td>${esc(r.material.brand+" "+r.material.product)}</td><td>${esc(r.printer.model)}</td><td>${esc(r.result.status)}</td><td><button data-delete="${index}" class="danger" type="button">Delete</button></td></tr>`).join("")}</tbody></table>`;
+    document.querySelectorAll("[data-delete]").forEach(button => button.onclick = () => {
+      const next = load(); next.splice(Number(button.dataset.delete),1); save(next); render();
+    });
+  }
+
+  $("receipt").addEventListener("submit", event => {
+    event.preventDefault();
+    if (!event.currentTarget.reportValidity()) return;
+    const receipts = prune(load());
+    receipts.unshift(currentReceipt());
+    save(receipts);
+    status("Saved only in this browser. Export a backup when the record matters.");
+    render();
+  });
+
+  $("validate").onclick = async () => {
+    if (!$("receipt").reportValidity()) return;
+    status("Validating structure…");
+    try {
+      const response = await fetch("https://mcp.paramat3d.com/v1/outcome/validate", {
+        method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(currentReceipt())
+      });
+      const result = await response.json();
+      status(result.valid ? "Valid. ParaMat did not retain this receipt." : "Needs correction: " + (result.errors||[]).map(e=>e.path+" — "+e.message).join("; "));
+    } catch {
+      status("Validation service unavailable. Nothing was saved or sent again.");
+    }
+  };
+
+  $("export").onclick = () => {
+    const receipts = prune(load());
+    if (!receipts.length) return status("There are no receipts to export.");
+    const blob = new Blob([JSON.stringify({schema:"paramat-outcome-export/v1",exported_at:new Date().toISOString(),receipts},null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob), link=document.createElement("a");
+    link.href=url; link.download="paramat-outcomes-"+new Date().toISOString().slice(0,10)+".json"; link.click();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    status("Export created. Store it where your farm records are protected.");
+  };
+
+  $("import").onchange = async event => {
+    const file=event.target.files?.[0]; if(!file)return;
+    try {
+      const data=JSON.parse(await file.text());
+      const incoming=Array.isArray(data)?data:data.receipts;
+      if(!Array.isArray(incoming))throw new Error();
+      save(prune([...incoming,...load()]).slice(0,5000));
+      status("Imported locally. Validate individual receipts before using them for analysis.");
+      render();
+    } catch { status("Import failed: expected a ParaMat receipt array or export."); }
+    event.target.value="";
+  };
+
+  $("deleteAll").onclick = () => {
+    if (!load().length) return status("There are no local receipts to delete.");
+    if (confirm("Delete every ParaMat outcome receipt stored in this browser?")) {
+      localStorage.removeItem(KEY); status("All local receipts were deleted."); render();
+    }
+  };
+  $("reset").onclick = () => setTimeout(()=>status("Form cleared. No saved receipts were changed."),0);
+  render();
+})();
+</script>
+</body>
+</html>
