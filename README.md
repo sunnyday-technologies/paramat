@@ -1,14 +1,25 @@
 # ParaMat — Print Conditions
 
 Search or scan a 3D-printing filament and get **brand-specific** consensus print
-conditions (nozzle/bed temps as a range, flow, density), with a strength/finish
-goal toggle and provenance. Static, open, no server. Optional export to
-OpenPrintTag / OpenSpool for a reusable NFC tag.
+conditions (nozzle/bed temperatures as ranges, flow, density), with a
+strength/finish goal toggle and provenance. Static, open, no server. Optional
+export writes **OpenSpool 1.0 JSON/NDEF** to compatible **NTAG215/216** tags
+through Chrome/Android Web NFC. ParaMat does not currently emit OpenPrintTag or
+OpenTag3D records.
 
-**Live:** https://sunnyday-technologies.github.io/paramat/
+**Live:** https://paramat3d.com/
 
-Conditions are a statistical cross-source consensus of open data. Not measured
-optima; single-source materials are flagged. See NOTICE for data attribution.
+Conditions are a statistical cross-source consensus of open data. They are
+decision-support starting points, not measured optima; single-source materials
+are flagged. See NOTICE for data attribution.
+
+Tag-format references:
+
+- [OpenSpool](https://github.com/spuder/OpenSpool)
+- [OpenPrintTag](https://specs.openprinttag.org/) — separate NFC-V/ISO 15693
+  CBOR/NDEF path, not currently emitted
+- [OpenTag3D](https://opentag3d.info/spec.html) — separate binary NDEF format,
+  not currently emitted
 
 ## License
 
