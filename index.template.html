@@ -459,7 +459,26 @@
 
   // ---- label OCR (Tesseract.js, lazy-loaded) — works for ANY spool ----
   const ocrbox=document.getElementById("ocrbox"),ocrcam=document.getElementById("ocrcam"),ocrmsg=document.getElementById("ocrmsg");
-  let ocrStream=null,tessP=null;
+  const ocrcap=document.getElementById("ocrcap"),ocrenh=document.getElementById("ocrenh");
+  let ocrStream=null,tessP=null,ocrReady=false,ocrBusy=false;
+  function setOcrControls(){ocrcap.disabled=ocrenh.disabled=!ocrReady||ocrBusy}
+  async function waitForOcrFrame(timeoutMs){
+    const until=Date.now()+(timeoutMs||8000);
+    while(Date.now()<until){
+      if(ocrStream&&ocrcam.readyState>=2&&ocrcam.videoWidth>0&&ocrcam.videoHeight>0)return;
+      await new Promise(r=>setTimeout(r,50));
+    }
+    throw new Error("camera frame not ready");
+  }
+  async function captureOcrFrame(){
+    await waitForOcrFrame();
+    const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
+    if(!cv.width||!cv.height)throw new Error("camera frame not ready");
+    cv.getContext("2d").drawImage(ocrcam,0,0);return cv;
+  }
+  // Privacy-safe aggregate only: no photo, OCR text, device, or identifier leaves the browser.
+  function ocrEvent(e){telem(e,{brand:"OCR",product:"Enhanced read",family:""})}
+  setOcrControls();
   function loadTess(){if(window.Tesseract)return Promise.resolve();if(tessP)return tessP;
     ocrmsg.textContent="Loading OCR engine (first use, ~once)…";
     tessP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s);});
@@ -467,14 +486,23 @@
   document.getElementById("ocrbtn").onclick=async()=>{
     if(ocrStream){stopOcr();return}
     if(scanning)await stopScan();
-    try{ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});}
-    catch(e){toast("Allow camera access.");return}
-    ocrcam.srcObject=ocrStream;await ocrcam.play();ocrbox.classList.add("on");
+    drop.classList.remove("on");ocrReady=false;setOcrControls();ocrbox.classList.add("on");
     document.getElementById("ocrbtn").textContent="✕ Close camera";
-    ocrmsg.textContent="Fill the frame with the brand/material text, then Capture.";
-    loadTess().then(()=>{if(ocrStream)ocrmsg.textContent="Ready — Capture when the label text is sharp.";}).catch(()=>toast("OCR engine failed to load."));
+    ocrmsg.textContent="Starting camera…";
+    try{
+      ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
+      ocrcam.srcObject=ocrStream;await ocrcam.play();await waitForOcrFrame();
+    }catch(e){stopOcr();toast(e&&e.name==="NotAllowedError"?"Allow camera access.":"Camera did not produce a usable frame — close it and try again.");return}
+    ocrReady=true;setOcrControls();
+    ocrmsg.textContent=`Ready · ${ocrcam.videoWidth}×${ocrcam.videoHeight} — fill the frame and hold steady.`;
   };
-  function stopOcr(){if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}ocrbox.classList.remove("on");document.getElementById("ocrbtn").textContent="🔤 Read label (beta)";}
+  function stopOcr(){
+    ocrReady=false;
+    if(ocrStream){ocrStream.getTracks().forEach(t=>t.stop());ocrStream=null}
+    try{ocrcam.pause()}catch(_){}
+    ocrcam.srcObject=null;setOcrControls();ocrbox.classList.remove("on");
+    document.getElementById("ocrbtn").textContent="🔤 Read label (beta)";
+  }
   // Labels are often sideways on the spool — retry OCR at 90°/270°/180° until a
   // rotation yields temps or a database match.
   function rotCanvas(cv,deg){if(!deg)return cv;const c=document.createElement("canvas");
@@ -485,6 +513,16 @@
   // identity in the QR while temps are printed text. Uses the same lazy-loaded
   // scanner lib as the Scan button; SECURITY: text is parsed only, never opened.
   async function qrFromCanvas(cv){
+    // Native detector avoids loading/instantiating the fallback scanner on browsers
+    // that provide it. BarcodeDetector is not universal, so this is only a fast path.
+    if("BarcodeDetector" in window){
+      try{
+        const supported=await BarcodeDetector.getSupportedFormats();
+        const formats=["qr_code","data_matrix","ean_13","ean_8","upc_a","upc_e","code_128"].filter(f=>supported.includes(f));
+        if(formats.length){const hits=await new BarcodeDetector({formats}).detect(cv);
+          if(hits&&hits[0]&&hits[0].rawValue)return String(hits[0].rawValue)}
+      }catch(e){}
+    }
     try{await loadQr();}catch(e){return null}
     return new Promise(res=>{cv.toBlob(async b=>{
       if(!b){res(null);return}
@@ -495,14 +533,27 @@
       }catch(e){res(null)}
     },"image/png")});
   }
-  document.getElementById("ocrcap").onclick=async()=>{
-    if(!ocrStream)return;
+  function pickKnownGtin(raw,label){
+    if(!raw)return false;
+    const digits=raw.replace(/\D/g,"");
+    if(!/^\d{6,14}$/.test(digits))return false;
+    for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
+      if(GTIN[c]!=null){
+        stopOcr();toast(label||"Matched via QR");telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);
+        return true;
+      }
+    }
+    return false;
+  }
+  ocrcap.onclick=async()=>{
+    if(!ocrStream||ocrBusy)return;
+    ocrBusy=true;setOcrControls();
     ocrmsg.textContent="Reading…";
     try{
-      const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
-      cv.getContext("2d").drawImage(ocrcam,0,0);
-      const qrText=await qrFromCanvas(cv);            // free identity, if present
-      let best=null,firstText="";
+      const cv=await captureOcrFrame();
+      const qrText=await qrFromCanvas(cv);            // identifier first; skip OCR on known GTIN
+      if(pickKnownGtin(qrText,"Matched via QR"))return;
+      let best=null,firstText="";const reads=[];
       // Native TextDetector first (Chrome/Android on-device ML — far stronger on
       // scene text, zero download). Tesseract.js is the backup engine.
       if("TextDetector" in window){
@@ -510,10 +561,11 @@
           for(const deg of [0,90]){
             const blocks=await td.detect(rotCanvas(cv,deg));
             const text=(blocks||[]).map(b=>b.rawValue||"").join("\n");
+            if(text.trim())reads.push(text.trim());
             if(!deg)firstText=text;
             const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
             const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
-            if(!best||score>best.score)best={parsed,cands,score};
+            if(!best||score>best.score)best={parsed,cands,score,text};
             if(parsed.noz)break;
           }
         }catch(e){}
@@ -532,26 +584,24 @@
         for(const deg of [0,90,270,180]){
           if(deg)ocrmsg.textContent=`Trying rotated ${deg}°…`;
           const {data:{text}}=await Tesseract.recognize(prepCanvas(rotCanvas(cv,deg)),"eng");
+          if(text.trim())reads.push(text.trim());
           if(!firstText)firstText=text;
           const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
           const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
-          if(!best||score>best.score)best={parsed,cands,score};
+          if(!best||score>best.score)best={parsed,cands,score,text};
           if(parsed.noz)break;                          // printed temps found — done
         }
       }
       if(qrText){
-        const digits=qrText.replace(/\D/g,"");
-        if(/^\d{6,14}$/.test(digits)){
-          for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
-            if(GTIN[c]!=null){stopOcr();toast("Matched via QR");telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);return}}
-        }
         const qc=fuzzyMatch(qrText,8);                // URL slugs carry the product name
         if(qc.length)best.cands=[...new Map([...qc,...(best.cands||[])].map(m=>[m._i,m])).values()].slice(0,8);
       }
       stopOcr();
       if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
-      else showCandidates([],"Couldn't read this label confidently — try the barcode scan, search by name, or submit a label photo below.");
-    }catch(e){ocrmsg.textContent="OCR failed — try again with better light, or search by name.";}
+      else if(reads.length){toast("Text detected — review it below");renderLabelResult(parseLabel([...new Set(reads)].join("\n")),[]);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else showCandidates([],"No text was detected in this frame — fill the frame with the label, hold steady, and try again.");
+    }catch(e){ocrmsg.textContent=e&&e.message==="camera frame not ready"?"Camera frame was not ready — hold steady and try again.":"OCR failed — try again with better light, or search by name.";}
+    finally{ocrBusy=false;setOcrControls()}
   };
   // ✨ Enhanced read (testing): PP-OCRv4 on-device via ONNX Runtime Web. Models
   // download TO the phone (once, cached); the photo never leaves the device.
@@ -560,35 +610,34 @@
     enhP=new Promise((res,rej)=>{const s=document.createElement("script");s.src="enhanced-ocr.js";
       s.onload=res;s.onerror=()=>{enhP=null;rej(new Error("script load failed"))};document.head.appendChild(s)});
     return enhP}
-  document.getElementById("ocrenh").onclick=async()=>{
-    if(!ocrStream)return;
+  ocrenh.onclick=async()=>{
+    if(!ocrStream||ocrBusy)return;
+    ocrBusy=true;setOcrControls();ocrEvent("ocr_enh_start");
     ocrmsg.textContent="Starting enhanced read…";
     try{
-      const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
-      cv.getContext("2d").drawImage(ocrcam,0,0);
-      const qrText=await qrFromCanvas(cv);
-      await loadEnh();
-      let best=null;
+      const cv=await captureOcrFrame();
+      const qrText=await qrFromCanvas(cv);            // identifier first; never open its URL
+      if(pickKnownGtin(qrText,"Matched via QR"))return;
+      await loadEnh();                                // only load OCR when identification needs it
+      let best=null;const reads=[];
       for(const deg of [0,90]){
         const text=await window.enhancedOcr(rotCanvas(cv,deg),m=>ocrmsg.textContent=m+(deg?" (rotated)":""));
+        if(text.trim())reads.push(text.trim());
         const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
         const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
-        if(!best||score>best.score)best={parsed,cands,score};
+        if(!best||score>best.score)best={parsed,cands,score,text};
         if(parsed.noz)break;
       }
       if(qrText){
-        const digits=qrText.replace(/\D/g,"");
-        if(/^\d{6,14}$/.test(digits)){
-          for(const c of [digits,digits.replace(/^0+/,""),"0"+digits,"00"+digits]){
-            if(GTIN[c]!=null){stopOcr();toast("Matched via QR");telem("scan_match",DATA[GTIN[c]]);pick(DATA[GTIN[c]]);return}}
-        }
         const qc=fuzzyMatch(qrText,8);
         if(qc.length)best.cands=[...new Map([...qc,...(best.cands||[])].map(m=>[m._i,m])).values()].slice(0,8);
       }
       stopOcr();
-      if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){toast("Read label (enhanced)");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
-      else showCandidates([],"Couldn't read this label confidently — try the barcode scan, search by name, or submit a label photo below.");
-    }catch(e){ocrmsg.textContent="Enhanced read unavailable ("+e.message+") — the standard read still works.";}
+      if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){ocrEvent("ocr_enh_match");toast("Read label (enhanced)");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else if(reads.length){ocrEvent("ocr_enh_text");toast("Text detected — review it below");renderLabelResult(parseLabel([...new Set(reads)].join("\n")),[]);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
+      else{ocrEvent("ocr_enh_none");showCandidates([],"No text was detected in this frame — fill the frame with the label, hold steady, and try again.");}
+    }catch(e){ocrEvent("ocr_enh_error");ocrmsg.textContent=e&&e.message==="camera frame not ready"?"Camera frame was not ready — hold steady and try again.":"Enhanced read unavailable ("+e.message+") — the standard read still works.";}
+    finally{ocrBusy=false;setOcrControls()}
   };
   function fuzzyMatch(text,limit){
     const words=[...new Set(String(text).toLowerCase().replace(/[^a-z0-9+]+/g," ").split(/\s+/).filter(w=>w.length>1))];
