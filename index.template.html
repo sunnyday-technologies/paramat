@@ -670,9 +670,11 @@
     if(!ocrStream||ocrBusy)return;
     ocrBusy=true;setOcrControls();ocrEvent("ocr_enh_start");
     ocrmsg.textContent="Starting enhanced read…";
+    let captureNote="";
     try{
       const cv=await captureOcrFrame({preferStill:true});
-      ocrmsg.textContent=`Captured ${cv.width}×${cv.height} · ${cv._captureMode||"frame"} — checking codes…`;
+      captureNote=`${cv.width}×${cv.height} · ${cv._captureMode||"frame"}`;
+      ocrmsg.textContent=`Captured ${captureNote} — checking codes…`;
       const qrText=await qrFromCanvas(cv);            // identifier first; never open its URL
       if(pickKnownGtin(qrText,"Matched via QR"))return;
       await loadEnh();                                // only load OCR when identification needs it
@@ -695,8 +697,8 @@
       stopOcr();
       if(best&&(best.parsed.noz||best.parsed.bed||best.cands.length)){ocrEvent("ocr_enh_match");toast("Read label (enhanced)");renderLabelResult(best.parsed,best.cands);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
       else if(reads.length){ocrEvent("ocr_enh_text");toast("Text detected — review it below");renderLabelResult(parseLabel([...new Set(reads)].join("\n")),[]);card.scrollIntoView({behavior:"smooth",block:"nearest"});}
-      else{ocrEvent("ocr_enh_none");showCandidates([],"No text was detected in this frame — fill the frame with the label, hold steady, and try again.");}
-    }catch(e){ocrEvent("ocr_enh_error");ocrmsg.textContent=e&&e.message==="camera frame not ready"?"Camera frame was not ready — hold steady and try again.":"Enhanced read unavailable ("+e.message+") — the standard read still works.";}
+      else{ocrEvent("ocr_enh_none");showCandidates([],`No text was detected — fill the frame with the label, avoid glare, and try again. Capture: ${captureNote}.`);}
+    }catch(e){ocrEvent("ocr_enh_error");ocrmsg.textContent=(e&&e.message==="camera frame not ready"?"Camera frame was not ready — hold steady and try again.":"Enhanced read unavailable ("+e.message+") — the standard read still works.")+(captureNote?" Capture: "+captureNote+".":"");}
     finally{ocrBusy=false;setOcrControls()}
   };
   function fuzzyMatch(text,limit){
