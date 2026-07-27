@@ -152,6 +152,69 @@ export function parseFilamentLabel(value, options = {}) {
     "mm/s",
   );
 
+  const coolingFan = parseRange(
+    text,
+    [
+      /(?:part\s*)?(?:cooling\s*)?fan(?:\s*speed)?\D{0,18}(\d{1,3})(?:\s*(?:[-\u2013~]|to)\s*(\d{1,3}))?\s*%/i,
+    ],
+    0,
+    100,
+    "%",
+  );
+
+  const flowRatioDecimal = text.match(
+    /(?:flow\s*(?:ratio|multiplier)|extrusion\s*multiplier)\D{0,14}(\d(?:[.,]\d{1,3})?)/i,
+  );
+  const flowPercent = text.match(
+    /(?:^|[\s,;])(?:flow|extrusion\s*flow)\D{0,10}(\d{2,3}(?:[.,]\d+)?)\s*%/i,
+  );
+  let flowRatio = null;
+  if (flowRatioDecimal) {
+    const value = Number(flowRatioDecimal[1].replace(",", "."));
+    if (Number.isFinite(value) && value >= 0.5 && value <= 1.5) {
+      flowRatio = candidate(value, "ratio", flowRatioDecimal[0]);
+    }
+  } else if (flowPercent) {
+    const value = Number(flowPercent[1].replace(",", ".")) / 100;
+    if (Number.isFinite(value) && value >= 0.5 && value <= 1.5) {
+      flowRatio = candidate(value, "ratio", flowPercent[0]);
+    }
+  }
+
+  const volumetricMatch = text.match(
+    /(?:max(?:imum)?\s*)?(?:volumetric|volume)\s*(?:flow|speed|rate)?\D{0,18}(\d{1,3}(?:[.,]\d+)?)\s*mm\s*(?:3|\u00B3)\s*\/?\s*s/i,
+  );
+  let maxVolumetricSpeed = null;
+  if (volumetricMatch) {
+    const value = Number(volumetricMatch[1].replace(",", "."));
+    if (Number.isFinite(value) && value >= 0.1 && value <= 100) {
+      maxVolumetricSpeed = candidate(value, "mm\u00B3/s", volumetricMatch[0]);
+    }
+  }
+
+  const retractionMatch = text.match(
+    /retract(?:ion|ing)?\D{0,18}(\d{1,2}(?:[.,]\d+)?)\s*mm(?:\D{0,18}?(\d{1,3}(?:[.,]\d+)?)\s*mm\s*\/?\s*s)?/i,
+  );
+  let retraction = null;
+  if (retractionMatch) {
+    const distance = Number(retractionMatch[1].replace(",", "."));
+    const speedValue = retractionMatch[2]
+      ? Number(retractionMatch[2].replace(",", "."))
+      : null;
+    if (
+      Number.isFinite(distance) &&
+      distance >= 0 &&
+      distance <= 20 &&
+      (speedValue == null || (Number.isFinite(speedValue) && speedValue >= 1 && speedValue <= 200))
+    ) {
+      retraction = {
+        distance: candidate(distance, "mm", retractionMatch[0]),
+        speed: speedValue == null ? null : candidate(speedValue, "mm/s", retractionMatch[0]),
+        review: "unreviewed",
+      };
+    }
+  }
+
   const diameterMatch =
     text.match(/(?:diameter|dia\.?|ø)\D{0,12}(1[.,]\d{2}|2[.,]\d{2})\s*mm/i) ??
     text.match(/\b(1[.,]75|2[.,]85)\s*mm\b/i);
@@ -220,6 +283,10 @@ export function parseFilamentLabel(value, options = {}) {
     nozzle_temperature: nozzleTemperature,
     bed_temperature: bedTemperature,
     print_speed: speed,
+    cooling_fan: coolingFan,
+    flow_ratio: flowRatio,
+    max_volumetric_speed: maxVolumetricSpeed,
+    retraction,
     drying,
     flame_statement: flame,
     identifiers,
@@ -232,7 +299,7 @@ export function parseFilamentLabel(value, options = {}) {
 
   return {
     schema: "paramat-label-extraction/v2",
-    parser_version: "2.0.0",
+    parser_version: "2.1.0",
     source: "label_ocr",
     review: "unreviewed",
     raw_text: rawText.slice(0, 10_000),

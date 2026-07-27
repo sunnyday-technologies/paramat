@@ -383,7 +383,7 @@
   DATA.forEach((m,i)=>{m._k=((m.brand||"")+" "+(m.product||"")+" "+(m.family||"")).toLowerCase();m._i=i});
 
   const q=document.getElementById("q"),drop=document.getElementById("drop"),card=document.getElementById("card");
-  const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const toast=t=>{const e=document.getElementById("toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1800)};
   // Not-found → submission row. No uploads, no accounts: photos travel by email (private
   // inbox) or GitHub issue (their account gate) — nothing user-sent is ever published
@@ -764,6 +764,8 @@
       }),f=v2.fields||{},val=x=>x&&x.value!=null?x.value:null;
       return {fam:val(f.material_family),noz:val(f.nozzle_temperature),bed:val(f.bed_temperature),
         spd:val(f.print_speed),diameter:val(f.diameter),weight:val(f.net_weight),
+        fan:val(f.cooling_fan),flow:val(f.flow_ratio),mvs:val(f.max_volumetric_speed),
+        retraction:f.retraction?{distance:val(f.retraction.distance),speed:val(f.retraction.speed)}:null,
         drying:f.drying?{temp:val(f.drying.temperature),hours:val(f.drying.duration)}:null,
         brand:val(f.brand),product:val(f.product_name),color:val(f.color),
         ids:(f.identifiers||[]).map(val).filter(Boolean),
@@ -796,10 +798,14 @@
     if(p.diameter)tiles.push(`<div class="tile"><div class="k">Diameter · label</div><div class="v tnum">${p.diameter}<span class="u"> mm</span></div></div>`);
     if(p.weight)tiles.push(`<div class="tile"><div class="k">Net weight · label</div><div class="v tnum">${p.weight}<span class="u"> g</span></div></div>`);
     if(p.drying&&p.drying.temp)tiles.push(`<div class="tile"><div class="k">Drying · label</div><div class="v tnum">${p.drying.temp}<span class="u"> °C${p.drying.hours?` / ${p.drying.hours}h`:""}</span></div></div>`);
+    if(p.fan)tiles.push(`<div class="tile"><div class="k">Cooling fan - label</div><div class="v tnum">${rng(p.fan)}<span class="u"> %</span></div></div>`);
+    if(p.flow!=null)tiles.push(`<div class="tile"><div class="k">Flow ratio - label</div><div class="v tnum">${p.flow}</div></div>`);
+    if(p.mvs!=null)tiles.push(`<div class="tile"><div class="k">Max volumetric speed - label</div><div class="v tnum">${p.mvs}<span class="u"> mm&sup3;/s</span></div></div>`);
+    if(p.retraction&&p.retraction.distance!=null)tiles.push(`<div class="tile"><div class="k">Retraction - label</div><div class="v tnum">${p.retraction.distance}<span class="u"> mm${p.retraction.speed!=null?` / ${p.retraction.speed} mm/s`:""}</span></div></div>`);
     shown=cands;
     const cbtns=cands.length
       ? `<div class="prov" style="padding-bottom:6px"><b>Match in our database</b> — tap for consensus + strength/finish goal:</div><div style="padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px">${cands.slice(0,6).map((m,j)=>`<button class="btn cand" data-j="${j}" style="font-size:12.5px">${esc(m.brand)} ${esc(m.product)}</button>`).join("")}</div>`
-      : `<div class="prov">No close database match — the label's own values above are your reference.</div>`;
+      : `<div class="prov">No close database match — the label's own values above are your reference.${submitRow([p.brand,p.product,p.fam].filter(Boolean).join(" "))}</div>`;
     card.className="on";
     card.innerHTML=`<div class="rc">
       <div class="rc-head"><div class="name">📷 Read from your label</div>
@@ -807,17 +813,19 @@
       ${tiles.length?`<div class="tiles">${tiles.join("")}</div>`:`<div class="prov">No structured settings detected — try search by name.</div>`}
       ${p.raw?`<details class="prov"><summary><b>Review captured label text</b></summary>${p.ids&&p.ids.length?`<div style="margin-top:7px"><b>Possible product/lot codes:</b> ${p.ids.map(esc).join(", ")}</div>`:""}<pre style="white-space:pre-wrap;max-height:180px;overflow:auto">${esc(p.raw)}</pre></details>`:""}
       <div class="export"><h3>🗄 Add to your shelf</h3>
-        <div class="row"><input id="spoolname" placeholder="Name this spool" value="${esc(fam||'Filament')}" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)"><button class="btn pri" id="savespool" style="justify-content:center">Save</button></div></div>
+        <div class="row"><input id="spoolname" placeholder="Name this spool" value="${esc([p.brand,p.product].filter(Boolean).join(" ")||fam||'Filament')}" style="flex:1;min-width:0;padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink)"><button class="btn pri" id="savespool" style="justify-content:center">Save</button></div></div>
       ${cbtns}
     </div>`;
     card.querySelectorAll(".cand").forEach(b=>b.onclick=()=>pick(shown[+b.dataset.j]));
     const sv=document.getElementById("savespool");
     if(sv)sv.onclick=()=>shelfAdd({name:(document.getElementById("spoolname").value||p.product||fam||"Filament"),
       family:fam,brand:p.brand||null,color:p.color||null,noz:p.noz,bed:p.bed,spd:p.spd,
+      fan_lo:p.fan?p.fan[0]:null,fan_hi:p.fan?p.fan[1]:null,flow:p.flow??null,mvs:p.mvs??null,
+      retr:p.retraction?p.retraction.distance:null,retr_v:p.retraction?p.retraction.speed:null,
       diameter:p.diameter||null,weight:p.weight||null,
       drynote:p.drying&&p.drying.temp?(p.drying.temp+"°C"+(p.drying.hours?"/"+p.drying.hours+"h":"")):null,
       label_ids:p.ids||[],label_gtins:p.gtins||[],label_text:p.raw||null,
-      flame:p.flame||null,source:"label"});
+      label_extraction:p.structured||null,flame:p.flame||null,source:"label"});
   }
 
   // ---- personal shelf: on-device inventory of YOUR spools (works for rare/uncatalogued) ----
