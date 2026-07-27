@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>ParaMat — community usage stats</title>
+<title>ParaMat — real usage stats</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Public, anonymous aggregate of which filaments the ParaMat community looks up, exports, and flags. No personal data — this is everything we collect.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B5%3C/text%3E%3C/svg%3E">
@@ -36,6 +36,11 @@
   .pick{display:flex;gap:8px;align-items:center;margin:6px 0 0}
   select,button{font:15px inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
   .note{font-size:13.5px;color:var(--ink3);margin-top:14px}
+  .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+  .total{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px}
+  .total b{display:block;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+  .total span{font-size:12px;color:var(--ink3)}
+  @media(max-width:520px){.totals{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -48,16 +53,17 @@
 <div class="wrap">
   <header>
     <div class="eyebrow">ParaMat · public aggregate</div>
-    <h1>Community usage stats</h1>
-    <p>Everything ParaMat collects, shown in full: anonymous per-month counters of which materials
-      get opened, exported, queried through MCP, or flagged. No IPs, no accounts, no individual events —
-      <a href="legal.html">how this works</a>. <a href="./">← Back to the tool</a></p>
+    <h1>Real usage stats</h1>
+    <p>Anonymous per-month counts of real browser interactions, agent/MCP calls, direct API calls,
+      and corrections. Declared QA and load-test traffic is excluded. No IPs, accounts, client IDs,
+      or session identifiers — <a href="legal.html">how this works</a>.
+      <a href="./">← Back to the tool</a></p>
     <div class="pick"><label for="mo" class="eyebrow" style="font-size:10px">Month</label>
       <select id="mo"></select><button id="go">Load</button></div>
   </header>
   <div id="out"><div class="rc"><div class="empty">Loading…</div></div></div>
-  <p class="note">Browser usage counts come only from visitors who opt in; MCP counts are automatic, aggregate-only tool usage; flags come from anyone tapping
-    "🚩 Looks wrong". Counts are approximate (best-effort). MCP telemetry never stores search text, barcodes, receipt contents, preflight request contents, IPs, user agents, client identities, or session identifiers. Raw JSON:
+  <p class="note">These are activity counts, not unique people. Browser counts come only from visitors who opt in; MCP and API counts are automatic, aggregate-only requests; flags come from anyone tapping
+    "🚩 Looks wrong". Counts are approximate (best-effort). Telemetry never stores search text, barcodes, receipt contents, preflight request contents, IPs, user agents, client identities, or session identifiers. Raw real-use JSON:
     <a id="raw" href="#">/top</a> · License CC BY 4.0.</p>
 </div>
 <script>
@@ -82,18 +88,18 @@
     try{
       const r=await fetch(API+"/top?month="+month+"&fresh=1");
       const d=await r.json();
-      const rows=(d.rows||[]).filter(x=>x.n>0);
-      if(!rows.length){out.innerHTML='<div class="rc"><div class="empty">No data for '+esc(month)+' yet. Counts appear once visitors opt in to sharing (or flag a result).</div></div>';return;}
+      const rows=(d.rows||[]).filter(x=>x.n>0&&!x.e.startsWith("test_"));
+      if(!rows.length){out.innerHTML='<div class="rc"><div class="empty">No real-use activity for '+esc(month)+' yet.</div></div>';return;}
       const flags=rows.filter(x=>x.e==="flag");
       const mcp=rows.filter(x=>x.e.startsWith("mcp_"));
       const api=rows.filter(x=>x.e.startsWith("api_"));
-      const tests=rows.filter(x=>x.e.startsWith("test_"));
-      const use=rows.filter(x=>x.e!=="flag"&&!x.e.startsWith("mcp_")&&!x.e.startsWith("api_")&&!x.e.startsWith("test_"));
+      const use=rows.filter(x=>x.e!=="flag"&&!x.e.startsWith("mcp_")&&!x.e.startsWith("api_"));
       const max=Math.max(...rows.map(x=>x.n));
-      out.innerHTML=(flags.length?`<h2>🚩 Flagged for review</h2>`+table("Materials the community flagged as wrong",flags,max):"")+
+      const sum=a=>a.reduce((n,r)=>n+r.n,0);
+      out.innerHTML=`<div class="totals"><div class="total"><b>${sum(use).toLocaleString()}</b><span>browser interactions</span></div><div class="total"><b>${sum(mcp).toLocaleString()}</b><span>agent / MCP calls</span></div><div class="total"><b>${sum(api).toLocaleString()}</b><span>direct API calls</span></div></div>`+
+        (flags.length?`<h2>🚩 Flagged for review</h2>`+table("Materials the community flagged as wrong",flags,max):"")+
         (mcp.length?`<h2>Agent & MCP activity</h2>`+table("Anonymous MCP tool calls",mcp,max):"")+
         (api.length?`<h2>API & slicer activity</h2>`+table("Anonymous direct API calls",api,max):"")+
-        (tests.length?`<h2>Declared test traffic</h2>`+table("Synthetic MCP load checks (excluded from community activity)",tests,max):"")+
         (use.length?`<h2>Browser activity</h2>`+table("Opens & exports (opt-in visitors)",use,max):"")+
         (d.truncated?'<p class="note">List truncated — see raw JSON for more.</p>':"");
     }catch(e){out.innerHTML='<div class="rc"><div class="empty">Could not load stats — try again shortly.</div></div>';}

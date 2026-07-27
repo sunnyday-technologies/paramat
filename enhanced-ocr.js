@@ -51,14 +51,15 @@
     }
     return new ort.Tensor("float32", out, [1, 3, h, w]);
   }
-  function sized(src, w, h) {
+  function sized(src, w, h, filter) {
     const c = document.createElement("canvas"); c.width = w; c.height = h;
     const x = c.getContext("2d"); x.imageSmoothingQuality = "high";
+    if (filter) x.filter = filter;
     x.drawImage(src, 0, 0, w, h); return c;
   }
   // DB postprocess: threshold -> connected components -> padded axis-aligned boxes.
-  function dbBoxes(prob, W, H) {
-    const THRESH = 0.3, BOX_THRESH = 0.5, MIN = 3, UNCLIP = 1.6;
+  function dbBoxes(prob, W, H, relaxed) {
+    const THRESH = relaxed ? 0.2 : 0.3, BOX_THRESH = relaxed ? 0.34 : 0.5, MIN = 3, UNCLIP = 1.6;
     const raw = new Uint8Array(W * H);
     for (let i = 0; i < W * H; i++) raw[i] = prob[i] > THRESH ? 1 : 0;
     // 3x3 dilation: DB predicts shrunk text kernels — merge near-fragments
@@ -115,9 +116,16 @@
     if (Math.max(canvas.width, canvas.height) * k > 1920) k = 1920 / Math.max(canvas.width, canvas.height);
     const dw = Math.max(32, Math.round(canvas.width * k / 32) * 32);
     const dh = Math.max(32, Math.round(canvas.height * k / 32) * 32);
-    const dout = await det.run({ x: toTensor(sized(canvas, dw, dh), [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) });
-    const prob = dout[Object.keys(dout)[0]].data;
-    const boxes = dbBoxes(prob, dw, dh);
+    let dout = await det.run({ x: toTensor(sized(canvas, dw, dh), [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) });
+    let prob = dout[Object.keys(dout)[0]].data;
+    let boxes = dbBoxes(prob, dw, dh, false), recFilter = "";
+    if (!boxes.length) {
+      onmsg("Trying low-contrast text…");
+      dout = await det.run({ x: toTensor(sized(canvas, dw, dh, "grayscale(1) contrast(1.55)"), [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) });
+      prob = dout[Object.keys(dout)[0]].data;
+      boxes = dbBoxes(prob, dw, dh, true);
+      recFilter = "grayscale(1) contrast(1.45)";
+    }
     const sx = canvas.width / dw, sy = canvas.height / dh;
     const texts = [];
     for (const b of boxes.slice(0, 40)) {
@@ -127,6 +135,7 @@
       const rw = Math.max(16, Math.min(640, Math.round(48 * w / h)));
       const rc = document.createElement("canvas"); rc.width = rw; rc.height = 48;
       const rx = rc.getContext("2d"); rx.imageSmoothingQuality = "high";
+      if (recFilter) rx.filter = recFilter;
       rx.drawImage(canvas, x, y, w, h, 0, 0, rw, 48);
       const ro = await rec.run({ x: toTensor(rc, [0.5, 0.5, 0.5], [0.5, 0.5, 0.5]) });
       const o = ro[Object.keys(ro)[0]];

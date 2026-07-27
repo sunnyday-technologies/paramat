@@ -220,7 +220,7 @@
   <!-- camera boxes sit ABOVE the buttons: when a camera is open, its
        controls (capture / stop) are directly below the view, not above it -->
   <div id="scanbox"><button class="camclose" id="scanclose">✕ Close</button><div class="scanlive"><span class="pulse"></span>Scanning — no button needed</div><div id="reader"></div><div class="hint" id="scanmsg" role="status">Point the camera at the spool barcode or QR…</div></div>
-  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrcap" style="flex:1;min-height:54px">📸 Capture &amp; read label</button><button class="btn" id="ocrenh" style="flex:1;min-height:54px">✨ Enhanced read (testing)</button></div><div class="hint">Label reading is beta — less accurate than the barcode scan. Fill the frame with the printed label, in good light. <b>Enhanced read</b> downloads a stronger on-device reading model once (≈16&nbsp;MB, cached) — your photo never leaves this device.</div><div class="hint" id="ocrmsg" role="status"></div></div>
+  <div id="ocrbox"><button class="camclose" id="ocrclose">✕ Close</button><video id="ocrcam" playsinline muted></video><div class="row" style="margin-top:8px"><button class="btn" id="ocrenh" style="flex:1;min-height:54px">✨ Capture sharp frame + read</button><button class="btn" id="ocrcap" style="flex:1;min-height:54px">Compatibility OCR</button></div><div class="hint">Fill the frame with the printed label and hold steady. <b>Capture sharp frame</b> uses fast PP-OCRv4 on your device, selecting a high-resolution still or the sharpest live frame automatically. The model downloads once (≈16&nbsp;MB, cached); your image never leaves this device.</div><div class="hint" id="ocrmsg" role="status"></div></div>
   <div class="actions">
     <button class="btn" id="scanbtn">📷 Scan barcode</button>
     <button class="btn" id="ocrbtn">🔤 Read label (beta)</button>
@@ -470,11 +470,65 @@
     }
     throw new Error("camera frame not ready");
   }
-  async function captureOcrFrame(){
+  function canvasFromSource(src){
+    const sw=src.width||src.videoWidth||0,sh=src.height||src.videoHeight||0;
+    if(!sw||!sh)throw new Error("camera frame not ready");
+    const scale=Math.min(1,4096/Math.max(sw,sh),Math.sqrt(16e6/(sw*sh)));
+    const cv=document.createElement("canvas");cv.width=Math.max(1,Math.round(sw*scale));cv.height=Math.max(1,Math.round(sh*scale));
+    const x=cv.getContext("2d");x.imageSmoothingQuality="high";x.drawImage(src,0,0,cv.width,cv.height);return cv;
+  }
+  function videoFrame(){return canvasFromSource(ocrcam)}
+  function frameScore(cv){
+    const w=96,h=Math.max(48,Math.round(96*cv.height/cv.width));
+    const c=document.createElement("canvas");c.width=w;c.height=h;
+    const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(cv,0,0,w,h);
+    const d=x.getImageData(0,0,w,h).data,g=new Float32Array(w*h);
+    let sum=0,sum2=0;
+    for(let i=0,p=0;i<g.length;i++,p+=4){const v=.299*d[p]+.587*d[p+1]+.114*d[p+2];g[i]=v;sum+=v;sum2+=v*v}
+    let edge=0,n=0;
+    for(let y=1;y<h-1;y++)for(let xx=1;xx<w-1;xx++){const i=y*w+xx;
+      edge+=Math.abs(4*g[i]-g[i-1]-g[i+1]-g[i-w]-g[i+w]);n++}
+    const variance=Math.max(0,sum2/g.length-(sum/g.length)**2);
+    return edge/Math.max(1,n)+Math.sqrt(variance)*.12;
+  }
+  async function tuneOcrCamera(track){
+    if(!track||!track.getCapabilities||!track.applyConstraints)return;
+    try{
+      const caps=track.getCapabilities(),advanced={};
+      if(Array.isArray(caps.focusMode)&&caps.focusMode.includes("continuous"))advanced.focusMode="continuous";
+      if(Array.isArray(caps.exposureMode)&&caps.exposureMode.includes("continuous"))advanced.exposureMode="continuous";
+      if(Array.isArray(caps.whiteBalanceMode)&&caps.whiteBalanceMode.includes("continuous"))advanced.whiteBalanceMode="continuous";
+      if(Object.keys(advanced).length)await track.applyConstraints({advanced:[advanced]});
+    }catch(_){}
+  }
+  async function captureOcrFrame(options){
     await waitForOcrFrame();
-    const cv=document.createElement("canvas");cv.width=ocrcam.videoWidth;cv.height=ocrcam.videoHeight;
-    if(!cv.width||!cv.height)throw new Error("camera frame not ready");
-    cv.getContext("2d").drawImage(ocrcam,0,0);return cv;
+    const preferStill=!!(options&&options.preferStill),track=ocrStream&&ocrStream.getVideoTracks()[0];
+    let ic=null;
+    if(track&&"ImageCapture" in window)try{ic=new ImageCapture(track)}catch(_){}
+    if(preferStill&&ic&&ic.takePhoto){
+      try{
+        ocrmsg.textContent="Locking focus and capturing a high-resolution frame…";
+        const timeout=new Promise((_,rej)=>setTimeout(()=>rej(new Error("still timeout")),1400));
+        const blob=await Promise.race([ic.takePhoto(),timeout]);
+        let bitmap;
+        try{bitmap=await createImageBitmap(blob,{imageOrientation:"from-image"})}catch(_){bitmap=await createImageBitmap(blob)}
+        const cv=canvasFromSource(bitmap);if(bitmap.close)bitmap.close();
+        cv._captureMode="high-resolution still";return cv;
+      }catch(_){}
+    }
+    const frames=[];
+    for(let i=0;i<4;i++){
+      if(i)await new Promise(r=>setTimeout(r,90));
+      try{
+        if(ic&&ic.grabFrame){const bitmap=await ic.grabFrame();const cv=canvasFromSource(bitmap);
+          if(bitmap.close)bitmap.close();frames.push(cv)}
+        else frames.push(videoFrame());
+      }catch(_){frames.push(videoFrame())}
+    }
+    frames.sort((a,b)=>frameScore(b)-frameScore(a));
+    const best=frames[0]||videoFrame();best._captureMode=frames.length>1?"sharpest of "+frames.length+" frames":"live frame";
+    return best;
   }
   // Privacy-safe aggregate only: no photo, OCR text, device, or identifier leaves the browser.
   function ocrEvent(e){telem(e,{brand:"OCR",product:"Enhanced read",family:""})}
@@ -490,8 +544,9 @@
     document.getElementById("ocrbtn").textContent="✕ Close camera";
     ocrmsg.textContent="Starting camera…";
     try{
-      ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
+      ocrStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"},width:{ideal:2560},height:{ideal:1440}}});
       ocrcam.srcObject=ocrStream;await ocrcam.play();await waitForOcrFrame();
+      await tuneOcrCamera(ocrStream.getVideoTracks()[0]);await new Promise(r=>setTimeout(r,300));
     }catch(e){stopOcr();toast(e&&e.name==="NotAllowedError"?"Allow camera access.":"Camera did not produce a usable frame — close it and try again.");return}
     ocrReady=true;setOcrControls();
     ocrmsg.textContent=`Ready · ${ocrcam.videoWidth}×${ocrcam.videoHeight} — fill the frame and hold steady.`;
@@ -550,7 +605,8 @@
     ocrBusy=true;setOcrControls();
     ocrmsg.textContent="Reading…";
     try{
-      const cv=await captureOcrFrame();
+      const cv=await captureOcrFrame({preferStill:false});
+      ocrmsg.textContent=`Captured ${cv.width}×${cv.height} · ${cv._captureMode||"frame"} — checking codes…`;
       const qrText=await qrFromCanvas(cv);            // identifier first; skip OCR on known GTIN
       if(pickKnownGtin(qrText,"Matched via QR"))return;
       let best=null,firstText="";const reads=[];
@@ -615,19 +671,23 @@
     ocrBusy=true;setOcrControls();ocrEvent("ocr_enh_start");
     ocrmsg.textContent="Starting enhanced read…";
     try{
-      const cv=await captureOcrFrame();
+      const cv=await captureOcrFrame({preferStill:true});
+      ocrmsg.textContent=`Captured ${cv.width}×${cv.height} · ${cv._captureMode||"frame"} — checking codes…`;
       const qrText=await qrFromCanvas(cv);            // identifier first; never open its URL
       if(pickKnownGtin(qrText,"Matched via QR"))return;
       await loadEnh();                                // only load OCR when identification needs it
       let best=null;const reads=[];
-      for(const deg of [0,90]){
-        const text=await window.enhancedOcr(rotCanvas(cv,deg),m=>ocrmsg.textContent=m+(deg?" (rotated)":""));
+      const tryEnhancedAngle=async deg=>{
+        const text=await window.enhancedOcr(rotCanvas(cv,deg),m=>ocrmsg.textContent=m+(deg?` (rotated ${deg}°)`:""));
         if(text.trim())reads.push(text.trim());
         const parsed=parseLabel(text),cands=matchFromOcr(fixOcr(text),8,parsed.fam);
         const score=(parsed.noz?4:0)+(parsed.bed?2:0)+(parsed.fam?1:0)+(cands.length?1:0);
         if(!best||score>best.score)best={parsed,cands,score,text};
-        if(parsed.noz)break;
-      }
+        return !!(parsed.noz||parsed.bed||cands.length);
+      };
+      let strong=false;
+      for(const deg of [0,90]){strong=await tryEnhancedAngle(deg);if(strong)break}
+      if(!strong)for(const deg of [270,180]){strong=await tryEnhancedAngle(deg);if(strong)break}
       if(qrText){
         const qc=fuzzyMatch(qrText,8);
         if(qc.length)best.cands=[...new Map([...qc,...(best.cands||[])].map(m=>[m._i,m])).values()].slice(0,8);
