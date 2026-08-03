@@ -1,0 +1,8 @@
+downloads/openspool-s3-pn532/*.py text eol=lf
+downloads/openspool-s3-pn532/*.md text eol=lf
+downloads/openspool-s3-pn532/*.txt text eol=lf
+downloads/openspool-s3-pn532/release-manifest.json text eol=lf
+downloads/openspool-s3-pn532/*.svg binary
+downloads/openspool-s3-pn532/*.step binary
+downloads/openspool-s3-pn532/*.stl binary
+downloads/openspool-s3-pn532/*.png binary

@@ -1,0 +1,34 @@
+CERN-OHL-S-2.0
+
+Copyright (c) 2026 Sunnyday Technologies LLC
+
+Covered Source
+--------------
+
+The ParaMat OpenSpool ESP32-S3 terminal-adapter + PN532 carrier hardware
+design is licensed under the CERN Open Hardware Licence Version 2 - Strongly
+Reciprocal (CERN-OHL-S-2.0). Covered Source includes:
+
+- openspool_s3_pn532_mount.py;
+- test_mount.py;
+- the generated STL, STEP, SVG, and PNG carrier artifacts; and
+- the hardware build instructions and dimensional notices in README.md.
+
+Complete Source is published at:
+https://github.com/sunnyday-technologies/paramat/tree/main/downloads/openspool-s3-pn532
+
+The full, unmodified license text is available at:
+https://spdx.org/licenses/CERN-OHL-S-2.0.html
+
+Scope exclusions
+----------------
+
+This notice does not relicense the ESP32-S3, terminal adapter, PN532 module,
+OpenSpool firmware, OpenTag3D materials, or any other third-party hardware,
+software, or documentation. ParaMat datasets, prediction methods, firmware,
+website software, trademarks, and other materials remain under their own
+applicable terms.
+
+The Covered Source and resulting products are provided as-is, without warranty.
+Physical fit, connector access, electrical safety, and NFC performance must be
+validated on the actual hardware before use.

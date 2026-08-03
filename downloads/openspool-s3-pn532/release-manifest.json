@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0",
+  "release": "v0.1-first-fit",
+  "release_date": "2026-08-03",
+  "status": "physical_validation_pending",
+  "model": "ParaMat OpenSpool ESP32-S3 terminal-adapter + PN532 carrier",
+  "cad_engine": "CadQuery 2.7.0",
+  "dimensions_mm": {
+    "length": 145.7,
+    "width": 78.0,
+    "height": 10.8
+  },
+  "target_hardware": {
+    "terminal_adapter_mm": [
+      80.0,
+      70.0
+    ],
+    "adapter_hole_pitch_mm": [
+      72.5,
+      32.0
+    ],
+    "adapter_hole_pitch_source": "reference board; actual AITRIP board measurement pending",
+    "adapter_pcb_hole_diameter_mm": 3.0,
+    "controller_envelope_mm": [
+      64.2,
+      28.2
+    ],
+    "pn532_envelope_mm": [
+      42.7,
+      40.4,
+      4.0
+    ]
+  },
+  "fastener": {
+    "thread": "M2.5",
+    "length_mm": 6.0,
+    "attachment": "blind self-tapping pilot slot in printed plastic",
+    "inserts_or_nuts_required": false
+  },
+  "license": {
+    "hardware": "CERN-OHL-S-2.0",
+    "notice": "LICENSE-Hardware.txt",
+    "source_location": "https://github.com/sunnyday-technologies/paramat/tree/main/downloads/openspool-s3-pn532"
+  },
+  "validation": {
+    "geometry_tests_passed": 5,
+    "nominal_xy_within_a1_mini_bed": true,
+    "actual_adapter_hole_pitch_verified": false,
+    "physical_fit": false,
+    "connector_access": false,
+    "rf_read_write_at_printer": false
+  },
+  "sources": [
+    "https://www.hestore.eu/en/prod_10048181.html",
+    "https://github.com/profharris/YD-ESP32-S3_ESP32-S3-WROOM-1_Dev",
+    "https://www.elechouse.com/elechouse/images/product/PN532_module_V3/PN532_%20Manual_V3.pdf",
+    "https://github.com/spuder/OpenSpool",
+    "https://spdx.org/licenses/CERN-OHL-S-2.0.html"
+  ],
+  "files": [
+    {
+      "name": "openspool_s3_pn532_carrier.stl",
+      "bytes": 392284,
+      "sha256": "7f48951eac2b897665a36415670d1bd47d4ecf18e01bfcfb7f45b4aa9d18a5e3"
+    },
+    {
+      "name": "openspool_s3_pn532_carrier.step",
+      "bytes": 355316,
+      "sha256": "049a5ede636261aaeb04eec62f949bbaf34ca1ee09c853d8aa6867daeb87b804"
+    },
+    {
+      "name": "openspool_s3_pn532_fit_check.step",
+      "bytes": 408610,
+      "sha256": "455f11be496b4970e84d02bf25209eeccc52979369e1db97782e8ad4cd7ae88c"
+    },
+    {
+      "name": "pn532_clip_fit_coupon.stl",
+      "bytes": 31484,
+      "sha256": "db15f79a8b22095510eaef6a415a625619ca488bf0a1bfe8697d31781ece3960"
+    },
+    {
+      "name": "pn532_clip_fit_coupon.step",
+      "bytes": 126271,
+      "sha256": "3883a0ddeb8f9bcde02ae1a5477e94283889e8a9bb25c2a6ee90618e04c86ca2"
+    },
+    {
+      "name": "m2p5_screw_fit_coupon.stl",
+      "bytes": 178684,
+      "sha256": "c9023d057e089c73ecfc2a42e70fa82ea0e93d4da46a0713d1c4964ab1c3c4dc"
+    },
+    {
+      "name": "m2p5_screw_fit_coupon.step",
+      "bytes": 93154,
+      "sha256": "515c766f5978da9e2046f91c005c547246995e808ab4c5c8ac43bef29634c637"
+    },
+    {
+      "name": "openspool_s3_pn532_carrier_preview.png",
+      "bytes": 110117,
+      "sha256": "a75775eca19aab50bff5d35350a4a3b9aed5038b85c06fc630c1765ecccc2807"
+    },
+    {
+      "name": "openspool_s3_pn532_carrier_preview.svg",
+      "bytes": 180827,
+      "sha256": "ba2680c9264f3882d2e8211fd560ffc51bea3a4023ecea0674974b30628aa4f3"
+    },
+    {
+      "name": "openspool_s3_pn532_mount.py",
+      "bytes": 13167,
+      "sha256": "1e10405f9c29630077bb56e695f1d5a0eb0f701cb49b28aa4cb7570de3ebe925"
+    },
+    {
+      "name": "test_mount.py",
+      "bytes": 2371,
+      "sha256": "87821e9f21f325451b27c8c12ad5dfd923ddc5eca7825e84c82c19f0de53ab28"
+    },
+    {
+      "name": "README.md",
+      "bytes": 6832,
+      "sha256": "0c1674ccb675d7d2c429691fe6b7fc1c7864811ff5d1f1a82c5f45f017252624"
+    },
+    {
+      "name": "LICENSE-Hardware.txt",
+      "bytes": 1262,
+      "sha256": "70c1dc3ff586d8117b1a6672c19cab7139273f4daf007b003d040a828ba7b73f"
+    }
+  ]
+}

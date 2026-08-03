@@ -77,3 +77,7 @@ prepare_data_issue returns a reviewable email draft; it does not send or store e
 - Submission/corrections: paramat3d@sunn3d.com
 
 Manufacturer verification is distinct from cross-source consensus. Printer agents must perform identity and hardware checks and require operator confirmation.
+
+## OpenSpool bench carrier
+- First-fit model and downloads: https://paramat3d.com/openspool-carrier
+- Status: physical fit and RF validation pending
