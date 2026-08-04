@@ -1,14 +1,21 @@
 {
   "schema_version": "1.0",
-  "release": "v0.1-first-fit",
+  "release": "v0.3-closed-side-cover-first-fit",
   "release_date": "2026-08-03",
   "status": "physical_validation_pending",
-  "model": "ParaMat OpenSpool ESP32-S3 terminal-adapter + PN532 carrier",
+  "model": "ParaMat OpenSpool ESP32-S3 + PN532 carrier and snap cover",
   "cad_engine": "CadQuery 2.7.0",
   "dimensions_mm": {
-    "length": 145.7,
-    "width": 78.0,
-    "height": 10.8
+    "carrier": {
+      "length": 145.7,
+      "width": 78.0,
+      "height": 10.8
+    },
+    "cover": {
+      "length": 149.6,
+      "width": 81.9,
+      "height": 27.6
+    }
   },
   "target_hardware": {
     "terminal_adapter_mm": [
@@ -22,14 +29,38 @@
     "adapter_hole_pitch_source": "reference board; actual AITRIP board measurement pending",
     "adapter_pcb_hole_diameter_mm": 3.0,
     "controller_envelope_mm": [
-      64.2,
-      28.2
+      63.0,
+      28.0
     ],
     "pn532_envelope_mm": [
       42.7,
       40.4,
       4.0
     ]
+  },
+  "cover": {
+    "attachment": "four compliant side latches with segmented edge groove",
+    "xy_clearance_per_side_mm": 0.35,
+    "wall_mm": 1.6,
+    "roof_mm": 1.6,
+    "long_side_service_openings": false,
+    "usb_access": {
+      "apertures": 2,
+      "nominal_width_height_mm": [
+        12.0,
+        9.0
+      ],
+      "centers_y_mm": [
+        -7.0,
+        7.0
+      ],
+      "center_z_mm": 20.5,
+      "center_rib_mm": 2.0,
+      "origin": "first_fit_unverified_controller_origin"
+    },
+    "button_tool_hole_mm": 4.2,
+    "rgb_membrane_mm": 0.45,
+    "control_origin": "first_fit_unverified_adapter_origin"
   },
   "fastener": {
     "thread": "M2.5",
@@ -43,11 +74,17 @@
     "source_location": "https://github.com/sunnyday-technologies/paramat/tree/main/downloads/openspool-s3-pn532"
   },
   "validation": {
-    "geometry_tests_passed": 5,
+    "geometry_tests_passed": 8,
     "nominal_xy_within_a1_mini_bed": true,
     "actual_adapter_hole_pitch_verified": false,
     "physical_fit": false,
     "connector_access": false,
+    "usb_aperture_alignment": false,
+    "usb_bridge_quality": false,
+    "closed_side_wire_clearance": false,
+    "cover_snap_fit": false,
+    "button_access": false,
+    "rgb_membrane_visibility": false,
     "rf_read_write_at_printer": false
   },
   "sources": [
@@ -66,12 +103,32 @@
     {
       "name": "openspool_s3_pn532_carrier.step",
       "bytes": 355316,
-      "sha256": "049a5ede636261aaeb04eec62f949bbaf34ca1ee09c853d8aa6867daeb87b804"
+      "sha256": "6ea6f0e2ef89d7d1773adfffc0c3474481c315991abd484b881477fed954046b"
+    },
+    {
+      "name": "openspool_s3_pn532_snap_cover.stl",
+      "bytes": 143484,
+      "sha256": "a719896fd3865104224d45e2b082bf7c3a42ceab2042fdf8cda07db28fe4571e"
+    },
+    {
+      "name": "openspool_s3_pn532_snap_cover.step",
+      "bytes": 345137,
+      "sha256": "8ad01f50d09b680fa4451af424c2c47ca334313d61d36a46aad5d0fe0aa06bd7"
     },
     {
       "name": "openspool_s3_pn532_fit_check.step",
-      "bytes": 408610,
-      "sha256": "455f11be496b4970e84d02bf25209eeccc52979369e1db97782e8ad4cd7ae88c"
+      "bytes": 768887,
+      "sha256": "bfcb0a649f21c3bc66dd4e12eef2d2bd78e79660e34b1442f5ca5f51d3b6bb1d"
+    },
+    {
+      "name": "snap_cover_latch_fit_coupon.stl",
+      "bytes": 4084,
+      "sha256": "67d98cc09bf08fa5886fe41367404b97da804008ca8d181de716d61e86b1d3db"
+    },
+    {
+      "name": "snap_cover_latch_fit_coupon.step",
+      "bytes": 78988,
+      "sha256": "2bc8d5aca789d0796a360ef311cb317e957ba1d212b2475cc5ddf2664bcb4469"
     },
     {
       "name": "pn532_clip_fit_coupon.stl",
@@ -81,7 +138,7 @@
     {
       "name": "pn532_clip_fit_coupon.step",
       "bytes": 126271,
-      "sha256": "3883a0ddeb8f9bcde02ae1a5477e94283889e8a9bb25c2a6ee90618e04c86ca2"
+      "sha256": "538340f2c3e9567ad289dd7afcaa9896d61d172ba2a48c511ae630f5c2366b1a"
     },
     {
       "name": "m2p5_screw_fit_coupon.stl",
@@ -90,8 +147,8 @@
     },
     {
       "name": "m2p5_screw_fit_coupon.step",
-      "bytes": 93154,
-      "sha256": "515c766f5978da9e2046f91c005c547246995e808ab4c5c8ac43bef29634c637"
+      "bytes": 93155,
+      "sha256": "0ff5c32c72051ae0b0e9a644ff47a5678bd374d0a642cc5f8d02602903463bce"
     },
     {
       "name": "openspool_s3_pn532_carrier_preview.png",
@@ -104,19 +161,29 @@
       "sha256": "ba2680c9264f3882d2e8211fd560ffc51bea3a4023ecea0674974b30628aa4f3"
     },
     {
+      "name": "openspool_s3_pn532_snap_cover_preview.png",
+      "bytes": 150797,
+      "sha256": "45d4aaf02aee48014b2175d1e4d01e82e7264602f7a31313bd50741b32a96e90"
+    },
+    {
+      "name": "openspool_s3_pn532_snap_cover_preview.svg",
+      "bytes": 86375,
+      "sha256": "64b04a9a49eff69d4608732b8c76b4844bf18082cd303dc52d249bc69e3d7bc6"
+    },
+    {
       "name": "openspool_s3_pn532_mount.py",
-      "bytes": 13167,
-      "sha256": "1e10405f9c29630077bb56e695f1d5a0eb0f701cb49b28aa4cb7570de3ebe925"
+      "bytes": 24204,
+      "sha256": "37026771cc19e944a7e6c1a3ad43ea2a2505086e832c72b9b0df1e37eca90aa8"
     },
     {
       "name": "test_mount.py",
-      "bytes": 2371,
-      "sha256": "87821e9f21f325451b27c8c12ad5dfd923ddc5eca7825e84c82c19f0de53ab28"
+      "bytes": 6475,
+      "sha256": "0254c8d51c3ce23d495a18c4559f3624ad2a6e906fb01a97800bd67ea70464c1"
     },
     {
       "name": "README.md",
-      "bytes": 6832,
-      "sha256": "0c1674ccb675d7d2c429691fe6b7fc1c7864811ff5d1f1a82c5f45f017252624"
+      "bytes": 11435,
+      "sha256": "0e26cfa63690e837f4ed8d5aab249f7b0130a6cde6aee8d8516a64d112791c25"
     },
     {
       "name": "LICENSE-Hardware.txt",

@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>OpenSpool ESP32-S3 + PN532 carrier — ParaMat3D</title>
-  <meta name="description" content="Download the first-fit parametric carrier for an 80 × 70 mm ESP32-S3 terminal adapter and Elechouse-style PN532 V3 reader.">
+  <title>OpenSpool ESP32-S3 + PN532 carrier and cover — ParaMat3D</title>
+  <meta name="description" content="Download the v0.3 first-fit closed-side carrier cover for an 80 × 70 mm ESP32-S3 terminal adapter and PN532 V3 reader.">
   <link rel="canonical" href="https://paramat3d.com/openspool-carrier">
-  <meta property="og:title" content="A first-fit OpenSpool hardware carrier — ParaMat3D">
-  <meta property="og:description" content="Parametric STL and STEP for the ParaMat polymer-filament OpenSpool bench demonstrator. Physical fit and RF validation are next.">
+  <meta property="og:title" content="A first-fit OpenSpool carrier and snap cover — ParaMat3D">
+  <meta property="og:description" content="Parametric STL and STEP for the ParaMat polymer-filament OpenSpool bench demonstrator. Cover fit, control access, LED diffusion, and RF validation are next.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://paramat3d.com/openspool-carrier">
-  <meta property="og:image" content="https://paramat3d.com/downloads/openspool-s3-pn532/openspool_s3_pn532_carrier_preview.png">
+  <meta property="og:image" content="https://paramat3d.com/downloads/openspool-s3-pn532/openspool_s3_pn532_snap_cover_preview.png">
   <meta name="theme-color" content="#013a73">
   <style>
     :root{--navy:#013a73;--green:#97d700;--ink:#0c2233;--muted:#526474;--line:#dce4e8;--page:#f5f7f6;--card:#fff;--rf:#e9f3d6}*{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font:16px/1.62 system-ui,-apple-system,"Segoe UI",sans-serif}a{color:#075ea8}.brand{background:var(--navy);border-bottom:4px solid var(--green)}.brandin{max-width:1120px;margin:auto;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;gap:18px}.brand img{height:17px;max-width:55vw}.brand nav{display:flex;gap:18px}.brand nav a{color:#fff;text-decoration:none;font-size:14px;font-weight:700}.wrap{max-width:1040px;margin:auto;padding:0 22px}.hero{padding:58px 0 36px;background:linear-gradient(135deg,#071929,#013a73);color:#fff}.hero .wrap{display:grid;grid-template-columns:1.3fr .7fr;gap:34px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.1em;font-size:12px;font-weight:800;color:#d6e4ef}.dot{width:9px;height:9px;background:var(--green);border-radius:2px}.status{display:inline-block;margin-left:10px;padding:5px 9px;border:1px solid rgba(255,255,255,.28);border-radius:99px;color:#fff;font-size:11px;letter-spacing:.07em;text-transform:uppercase}h1{font-size:clamp(34px,6vw,58px);line-height:1.04;letter-spacing:-.04em;margin:16px 0}h2{font-size:clamp(25px,4vw,36px);line-height:1.15;letter-spacing:-.025em;margin:0 0 12px}h3{margin:0 0 8px;font-size:18px}.lead{font-size:19px;color:#dbe6ef;max-width:63ch}.hero img{width:100%;background:#f4f6f8;border-radius:18px;box-shadow:0 20px 55px rgba(0,0,0,.3)}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:-18px auto 46px;position:relative}.fact{background:var(--card);padding:17px}.fact b{display:block;font-size:19px}.fact span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}section{margin:0 0 54px}.layout{display:grid;grid-template-columns:1fr 120px 1.45fr;gap:12px;align-items:stretch;margin-top:22px}.board{border-radius:14px;padding:24px 18px;display:flex;flex-direction:column;justify-content:center;text-align:center;min-height:170px}.pn{background:#fff1f2;border:2px solid #ce6d75}.adapter{background:#e9f7ee;border:2px solid #4b9a66}.board b{font-size:22px}.board span{color:var(--muted);font-size:14px}.gap{background:var(--rf);border:2px dashed #7da63a;border-radius:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:12px;font-weight:800;color:#476415}.downloads{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.dl{display:block;border:1px solid var(--line);border-radius:13px;background:var(--card);padding:17px;text-decoration:none;color:var(--ink)}.dl:hover{border-color:var(--navy);box-shadow:0 8px 24px rgba(1,58,115,.09)}.dl b{display:block}.dl span{display:block;font-size:13px;color:var(--muted);margin-top:3px}.primary{background:var(--navy);color:#fff;border-color:var(--navy)}.primary span{color:#dce8f1}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}.n{width:30px;height:30px;display:grid;place-items:center;background:var(--navy);color:#fff;border-radius:50%;font-weight:800;margin-bottom:13px}.callout{border-left:5px solid var(--green);background:#eef7dc;padding:18px 20px;border-radius:4px 12px 12px 4px}.warn{border-left-color:#d08a13;background:#fff7e6}.check{columns:2;column-gap:34px;padding-left:22px}.check li{break-inside:avoid;margin:0 0 8px}.fine{font-size:13px;color:var(--muted)}footer{background:#071929;color:#c5d3de;padding:34px 0;margin-top:70px}footer a{color:#b9e05d}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.button{display:inline-block;background:var(--green);color:#112600;text-decoration:none;font-weight:800;padding:12px 17px;border-radius:10px}.button.alt{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}code{font-family:ui-monospace,Consolas,monospace;background:#edf1f3;padding:.12em .35em;border-radius:4px}@media(max-width:760px){.hero .wrap{grid-template-columns:1fr}.hero img{max-width:520px}.facts{grid-template-columns:1fr 1fr;margin-top:20px}.layout{grid-template-columns:1fr}.gap{min-height:72px}.downloads,.steps{grid-template-columns:1fr}.check{columns:1}.brand nav a:nth-child(2){display:none}}
@@ -21,12 +21,12 @@
 
   <div class="hero"><div class="wrap">
     <div>
-      <div class="eyebrow"><span class="dot"></span> Polymer-filament OpenSpool hardware <span class="status">v0.1 · first fit</span></div>
-      <h1>One carrier.<br>Two real boards.</h1>
-      <p class="lead">A new parametric mount for the ParaMat bench reader: an 80 × 70 mm ESP32-S3 terminal adapter beside a PN532 V3, with the NFC antenna open and the controller connections reachable for testing.</p>
-      <div class="buttons"><a class="button" href="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier.stl">Download first-fit STL</a><a class="button alt" href="#validation">See what still needs testing</a></div>
+      <div class="eyebrow"><span class="dot"></span> Polymer-filament OpenSpool hardware <span class="status">v0.3 · closed-side first fit</span></div>
+      <h1>One carrier.<br>A snap-on cover.</h1>
+      <p class="lead">A parametric carrier and snap cover for the ParaMat bench reader: an 80 × 70 mm ESP32-S3 terminal adapter beside a PN532 V3, with a plain nonmetal RF path and service access for testing.</p>
+      <div class="buttons"><a class="button" href="downloads/openspool-s3-pn532/openspool_s3_pn532_snap_cover.stl">Download cover STL</a><a class="button alt" href="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier.stl">Carrier STL</a><a class="button alt" href="#validation">See what still needs testing</a></div>
     </div>
-    <img src="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier_preview.png" alt="Isometric line rendering of the OpenSpool ESP32-S3 terminal-adapter and PN532 carrier">
+    <img src="downloads/openspool-s3-pn532/openspool_s3_pn532_snap_cover_preview.png" alt="Isometric line rendering of the first-fit OpenSpool snap cover">
   </div></div>
 
   <main class="wrap">
@@ -42,19 +42,28 @@
       <p>The 44-pin YD/AITRIP controller plugs into its green terminal adapter, so clipping the ESP32 PCB itself would obstruct the header rows. The current first-fit model mounts the adapter through four board holes. Short M2.5 screws form a light thread in blind plastic pilot slots; no nuts or heat-set inserts are required for stationary bench use.</p>
       <div class="callout warn"><strong>Measure before the full print:</strong> the current 72.5 × 32 mm hole pattern comes from a published reference adapter. The actual AITRIP board's two center-to-center dimensions and hole diameter still need to be confirmed.</div>
       <div class="layout" role="img" aria-label="PN532 board separated from the terminal adapter by a 15 millimeter RF and wiring gap">
-        <div class="board pn"><b>PN532 V3</b><span>42.7 × 40.4 mm<br>antenna face open</span></div>
+        <div class="board pn"><b>PN532 V3</b><span>42.7 × 40.4 mm<br>plain-plastic RF path</span></div>
         <div class="gap">15 mm<br>RF + wiring<br>gap</div>
-        <div class="board adapter"><b>ESP32 terminal adapter</b><span>80 × 70 mm<br>USB-C faces the open outside end</span></div>
+        <div class="board adapter"><b>ESP32 terminal adapter</b><span>80 × 70 mm<br>two bounded USB-C apertures</span></div>
       </div>
     </section>
 
     <section>
+      <h2>A clean, closed-side cover with bounded USB access</h2>
+      <p>The separate inverted tray snaps around the existing printed carrier with four compliant side latches and a segmented edge groove. It uses no additional screws. Both long walls are closed. The short USB end retains its lower wall and a 2 mm center rib, with only two nominal 12 x 9 mm connector apertures centered at Y = -7 mm and Y = +7 mm. Their locations remain first-fit estimates relative to the provisional controller origin.</p>
+      <p>Two small top holes provide probe access to RST and BOOT. Their longitudinal positions come from the controller's 2.54 mm pin grid. The onboard RGB is covered by a 0.45 mm white-plastic membrane rather than a large opening. Control location, latch force, cable clearance, light diffusion, and RF performance remain physical-validation items.</p>
+    </section>
+
+    <section>
       <h2>Download the first-fit package</h2>
-      <p>Start with the two small coupons. They turn printer and material tolerances into a cheap measurement before the full carrier is printed.</p>
+      <p>Start with the three small coupons. They turn printer and material tolerances into a cheap measurement before the full carrier and cover are printed.</p>
       <div class="downloads">
-        <a class="dl primary" href="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier.stl"><b>Carrier STL</b><span>Generated prototype; print coupons first</span></a>
+        <a class="dl primary" href="downloads/openspool-s3-pn532/openspool_s3_pn532_snap_cover.stl"><b>Snap-cover STL</b><span>Roof-down export; physical fit pending</span></a>
+        <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_snap_cover.step"><b>Snap-cover STEP</b><span>Assembled orientation for CAD revision</span></a>
+        <a class="dl" href="downloads/openspool-s3-pn532/snap_cover_latch_fit_coupon.stl"><b>Cover latch coupon</b><span>Test one real latch against the carrier</span></a>
+        <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier.stl"><b>Carrier STL</b><span>Generated prototype; print coupons first</span></a>
         <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_carrier.step"><b>Carrier STEP</b><span>Edit in Rhino or other CAD</span></a>
-        <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_fit_check.step"><b>Fit-check STEP</b><span>Includes simplified board envelopes</span></a>
+        <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_fit_check.step"><b>Fit-check STEP</b><span>Carrier, cover, and simplified envelopes</span></a>
         <a class="dl" href="downloads/openspool-s3-pn532/pn532_clip_fit_coupon.stl"><b>PN532 clip coupon</b><span>Test clearance and flex first</span></a>
         <a class="dl" href="downloads/openspool-s3-pn532/m2p5_screw_fit_coupon.stl"><b>M2.5 screw coupon</b><span>1.9 / 2.1 / 2.3 mm pilots</span></a>
         <a class="dl" href="downloads/openspool-s3-pn532/openspool_s3_pn532_mount.py"><b>CadQuery source</b><span>Dimensions remain parametric</span></a>
@@ -67,15 +76,15 @@
     <section>
       <h2>Print → fit → prove</h2>
       <div class="steps">
-        <div class="step"><div class="n">1</div><h3>Calibrate cheaply</h3><p>Measure the adapter-hole pattern, then print both coupons in the intended material. Choose the screw pilot that is snug without splitting and confirm the PN532 clip force.</p></div>
+        <div class="step"><div class="n">1</div><h3>Calibrate cheaply</h3><p>Measure the adapter-hole pattern, then print all three coupons in the intended material. Confirm the screw pilot, PN532 clip force, and cover latch before a full print.</p></div>
         <div class="step"><div class="n">2</div><h3>Assemble openly</h3><p>Print the flat carrier in PETG, mount the adapter with four M2.5 × 6 mm screws, then install the controller and PN532. Use a brim if the long corners begin lifting.</p></div>
-        <div class="step"><div class="n">3</div><h3>Test the real system</h3><p>Connect both USB-C cables and intended wires. Verify NFC read/write with Wi-Fi active and at the final location beside the printer.</p></div>
+        <div class="step"><div class="n">3</div><h3>Test the real system</h3><p>Finish internal wiring, disconnect USB, and snap on the roof-down cover. Insert the intended USB plug or plugs through the two bounded apertures; then verify probe access, RGB diffusion, bridge quality, and NFC read/write beside the printer.</p></div>
       </div>
     </section>
 
     <section id="validation">
       <h2>What the computer proved—and what it did not</h2>
-      <div class="callout"><strong>Completed:</strong> the CAD generator produced valid solids. Five automated checks cover declared board envelopes, reference mounting inputs, board separation, and a nominal 145.7 × 78.0 mm footprint within a 180 × 180 mm plate envelope.</div>
+      <div class="callout"><strong>Completed:</strong> the CAD generator produced valid carrier, cover, and coupon solids. Eight automated geometry tests cover declared board envelopes, reference mounting inputs, board separation, the 149.6 x 81.9 mm cover envelope, roof-down orientation, snap-groove inputs, closed-wall solid probes, dual-USB aperture geometry, and declared pin-grid control locations within the A1 mini plate envelope. These are computer checks, not physical-fit evidence.</div>
       <ul class="check">
         <li>Actual adapter hole pitch is measured</li>
         <li>Adapter seats on all four bosses</li>
@@ -83,6 +92,12 @@
         <li>PN532 clips without visible stress</li>
         <li>Both USB-C plugs fit together</li>
         <li>Used terminals and BOOT/RST are reachable</li>
+        <li>Cover snaps without whitening, cracking, or PCB contact</li>
+        <li>Both bounded USB-C apertures align without loading the connectors</li>
+        <li>The two short USB bridges print cleanly</li>
+        <li>Closed walls do not trap or abrade internal wires</li>
+        <li>RST/BOOT work through the tool holes</li>
+        <li>RGB is visible through the 0.45 mm membrane</li>
         <li>NFC works with ESP32 off, on, and Wi-Fi active</li>
         <li>Range remains reliable beside the A1 mini</li>
       </ul>
@@ -97,7 +112,7 @@
 
     <section>
       <h2>Design method</h2>
-      <p>Published dimensions established the first geometry; the product photograph resolved orientation and access; RF constraints kept the antenna open; parametric CAD preserved revision speed; and automated checks rejected obvious plate, spacing, and envelope errors. The physical print now supplies the evidence that a screen cannot: actual shrinkage, clip force, connector reach, and read range.</p>
+      <p>Published dimensions established the first geometry; the product photograph resolved orientation and access; the controller's 2.54 mm pin grid located the cover controls; RF constraints kept metal-filled material away; parametric CAD preserved revision speed; and automated checks rejected obvious plate, spacing, and envelope errors. The physical print now supplies the evidence that a screen cannot: actual shrinkage, latch force, connector reach, LED diffusion, and read range.</p>
       <p class="fine">Copyright © 2026 Sunnyday Technologies. Covered hardware design files are released under <a href="downloads/openspool-s3-pn532/LICENSE-Hardware.txt">CERN-OHL-S-2.0</a>, which permits commercial use subject to its source and notice obligations. Files and resulting products are provided as-is and without warranty. Power off before assembly, prevent shorts, keep metal and wiring away from the PN532 antenna, and validate fit and radio performance before use.</p>
     </section>
   </main>
