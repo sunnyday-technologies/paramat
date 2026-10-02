@@ -906,9 +906,9 @@
       <div class="hint" style="padding:9px 20px 0">📍 Saved in this browser only — no account, nothing uploaded. Use <b>Export</b> or <b>Share</b> to back up or move devices.</div>
       ${a.length?a.map(x=>`<div class="tile" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;border-bottom:1px solid var(--hair)">
         <div style="min-width:0"><b>${esc(x.name||"Filament")}</b> <span class="chip" style="margin-left:4px">${esc(x.family||"?")}</span>
-          <div style="color:var(--ink2);font-size:12.5px;margin-top:3px">nozzle ${fmtT(x.noz)} °C · bed ${fmtT(x.bed)} °C${x.mvs?` · ${x.mvs} mm³/s`:""}${x.retr?` · retr ${x.retr}mm`:""}${x.remaining!=null?` · <b>${x.remaining}% left</b>`:""} · <span style="color:var(--ink3)">${src[x.source]||"saved"}</span></div>
+          <div style="color:var(--ink2);font-size:12.5px;margin-top:3px">nozzle ${esc(fmtT(x.noz))} °C · bed ${esc(fmtT(x.bed))} °C${x.mvs?` · ${esc(x.mvs)} mm³/s`:""}${x.retr?` · retr ${esc(x.retr)}mm`:""}${x.remaining!=null?` · <b>${esc(x.remaining)}% left</b>`:""} · <span style="color:var(--ink3)">${Object.hasOwn(src,x.source)?src[x.source]:"saved"}</span></div>
           ${x.notes?`<div style="color:var(--ink3);font-size:12px;margin-top:2px">${esc(x.notes)}</div>`:""}</div>
-        <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn" data-edit="${x.id}" style="font-size:13px;padding:0 10px">✎</button><button class="btn" data-del="${x.id}" style="font-size:13px;padding:0 10px">✕</button></div></div>`).join("")
+        <div style="display:flex;gap:6px;flex-shrink:0"><button class="btn" data-edit="${esc(x.id)}" style="font-size:13px;padding:0 10px">✎</button><button class="btn" data-del="${esc(x.id)}" style="font-size:13px;padding:0 10px">✕</button></div></div>`).join("")
       :`<div class="prov">Empty. Read a label, pick a match, or <b>Add manually</b> — builds your own catalog of even rare, non-listed filament, on your device. Export a backup so it's never lost.</div>`}
     </div>`;
     el.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>shelfDel(b.dataset.del));
@@ -979,7 +979,7 @@
       :`<span class="chip warn">! single source</span>`;
     const slug=slugOf(m);
     const ex=[];
-    const px=(k,v,u)=>{if(v!=null&&v!=="")ex.push(`<div class="tile"><div class="k">${k}</div><div class="v tnum">${v}${u?`<span class="u"> ${u}</span>`:""}</div></div>`)};
+    const px=(k,v,u)=>{if(v!=null&&v!=="")ex.push(`<div class="tile"><div class="k">${k}</div><div class="v tnum">${esc(v)}${u?`<span class="u"> ${u}</span>`:""}</div></div>`)};
     px("Nozzle 1st layer",m.noz_fl,"°C");px("Bed 1st layer",m.bed_fl,"°C");
     px("Fan min",m.fan_lo!=null?m.fan_lo+"%":null,"");px("Fan max",m.fan_hi!=null?m.fan_hi+"%":null,"");
     px("Retraction",m.retr,"mm");px("Retract spd",m.retr_v,"mm/s");px("Pressure adv.",m.pa,"");px("Softening",m.soft,"°C");

@@ -70,7 +70,7 @@
 (function(){
   const API="https://paramat-telemetry.nick-1d7.workers.dev";
   const out=document.getElementById("out"),mo=document.getElementById("mo");
-  const esc=s=>String(s==null?"":s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const now=new Date();
   for(let i=0;i<12;i++){const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()-i,1));
     const v=d.toISOString().slice(0,7);const o=document.createElement("option");o.value=v;o.textContent=v;mo.appendChild(o);}
@@ -78,7 +78,7 @@
   function table(title,rows,max){
     if(!rows.length)return "";
     return `<div class="rc"><table><thead><tr><th colspan="2">${esc(title)}</th><th style="text-align:right">count</th></tr></thead><tbody>`+
-      rows.map(r=>`<tr><td style="width:58%"><b>${esc(r.m.replace("|"," "))}</b>${r.f?` <span style="color:var(--ink3)">· ${esc(r.f)}</span>`:""}<div class="bar" style="width:${Math.max(4,Math.round(100*r.n/max))}%"></div></td><td style="color:var(--ink3)">${esc(LABELS[r.e]||r.e)}${r.g?` · ${esc(r.g)}`:""}</td><td class="n">${r.n.toLocaleString()}</td></tr>`).join("")+
+      rows.map(r=>`<tr><td style="width:58%"><b>${esc(String(r.m).replaceAll("|"," "))}</b>${r.f?` <span style="color:var(--ink3)">· ${esc(r.f)}</span>`:""}<div class="bar" style="width:${Math.max(4,Math.round(100*r.n/max))}%"></div></td><td style="color:var(--ink3)">${esc(LABELS[r.e]||r.e)}${r.g?` · ${esc(r.g)}`:""}</td><td class="n">${r.n.toLocaleString()}</td></tr>`).join("")+
       `</tbody></table></div>`;
   }
   async function load(){
