@@ -21,7 +21,7 @@ const EFFECT_WORDS = [
 ];
 
 const GENERIC_LINES =
-  /^(?:3d\s*printer\s*)?filament|premium|high quality|net weight|diameter|printing temperature|bed temperature|made in|www\.|https?:/i;
+  /(?:^(?:3d\s*printer\s*)?filament)|premium|high quality|net weight|diameter|printing temperature|bed temperature|made in|www\.|https?:/i;
 
 export function normalizeOcrText(value) {
   return String(value ?? "")
